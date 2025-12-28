@@ -14,6 +14,7 @@ Write-Host "Using PyInstaller..."
 
 & $PyInstaller --noconfirm --clean `
     --name "DocNexus_v$Version" `
+    --icon "$ProjectRoot\docnexus\static\logo.ico" `
     --onefile `
     --add-data "$ProjectRoot\docnexus\templates;docnexus\templates" `
     --add-data "$ProjectRoot\docnexus\static;docnexus\static" `
