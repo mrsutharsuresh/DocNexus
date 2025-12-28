@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.1.2] - 2025-12-28
+### Added
+- **Configurable Workspace**: New settings UI to change the active workspace folder directly from the application.
+- **Documentation Access**: Added direct link to documentation in the header.
+
+### Fixed
+- **Workspace Configuration**: Fixed path resolution issues that caused "Workspace not configured" errors.
+- **Documentation Link**: Fixed 404 error by correctly routing to the `docs` directory.
+- **Port Conflict**: Improved startup reliability by handling previous instances.
+
 ## [v1.0.1] - 2025-12-28
 
 ### Added

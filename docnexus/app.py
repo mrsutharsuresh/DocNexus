@@ -150,7 +150,7 @@ def save_config(config):
 # Load configuration
 CONFIG = load_config()
 MD_FOLDER = Path(CONFIG['active_workspace'])  # Folder containing documents
-DOCS_FOLDER = PROJECT_ROOT / 'doc'  # Documentation folder
+DOCS_FOLDER = PROJECT_ROOT / 'docs'  # Documentation folder
 ALLOWED_EXTENSIONS = {'.md', '.markdown', '.txt', '.docx'}
 
 # File size limits (in bytes)

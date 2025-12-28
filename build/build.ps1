@@ -44,4 +44,7 @@ Write-Host "Using PyInstaller..."
     --specpath "$BuildDir" `
     "$ProjectRoot\run.py"
 
+Write-Host "Copying documentation..."
+Copy-Item -Path "$ProjectRoot\docs" -Destination "$Output\docs" -Recurse -Force
+
 Write-Host "Build Complete: $Output\DocNexus_v$Version.exe" -ForegroundColor Green
