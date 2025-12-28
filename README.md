@@ -77,7 +77,7 @@ python run.py
 Detailed guides are available in the `docs/` directory:
 - [User Guide](docs/USER_GUIDE.md)
 - [Architecture Overview](docs/ARCHITECTURE.md)
-- [Contributing Guidelines](CONTRIBUTING.md)
+- [Contributing Guidelines](docs/CONTRIBUTING.md)
 
 ---
 

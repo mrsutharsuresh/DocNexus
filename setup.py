@@ -16,7 +16,7 @@ def read_version():
 
 # Read long description from README
 def read_long_description():
-    readme_file = os.path.join('doc', 'USER_GUIDE.md')
+    readme_file = os.path.join('docs', 'USER_GUIDE.md')
     if os.path.exists(readme_file):
         with open(readme_file, 'r', encoding='utf-8') as f:
             return f.read()
