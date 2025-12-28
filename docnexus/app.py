@@ -1677,12 +1677,16 @@ def set_active_workspace():
         if not workspace_path:
             return jsonify({'error': 'Missing workspace path'}), 400
         
+        # Resolve path to ensure it matches stored format
+        path_obj = Path(workspace_path).resolve()
+        workspace_str = str(path_obj)
+        
         config = load_config()
         
-        if workspace_path not in config['workspaces']:
-            return jsonify({'error': 'Workspace not configured'}), 400
+        if workspace_str not in config['workspaces']:
+            return jsonify({'error': f'Workspace not configured: {workspace_str}'}), 400
         
-        config['active_workspace'] = workspace_path
+        config['active_workspace'] = workspace_str
         
         # Update recent list
         if 'recent_workspaces' not in config:

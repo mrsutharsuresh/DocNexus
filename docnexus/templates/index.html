@@ -745,11 +745,14 @@
                 }
 
                 // If add successful, set as active
-                console.log("Setting active workspace:", newPath);
+                // Use the resolved path returned by the backend to ensure a match
+                const resolvedPath = addData.workspace || newPath;
+                console.log("Setting active workspace:", resolvedPath);
+
                 const activeResponse = await fetch('/api/workspaces/active', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ path: newPath })
+                    body: JSON.stringify({ path: resolvedPath })
                 });
 
                 const activeData = await activeResponse.json();
