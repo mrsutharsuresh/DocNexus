@@ -8,11 +8,14 @@ All notable changes to this project will be documented in this file.
 - **Sidebar Table of Contents**: Added a dynamic, sticky Table of Contents on the View page with nested indentation and scroll-spy highlighting.
 - **Configurable Workspace**: New settings UI to change the active workspace folder directly from the application.
 - **Documentation Access**: Added direct link to documentation in the header.
-- **Multi-page Documentation Browser**: New sidebar navigation allows browsing all documentation files directly within the application.
+- **Configurable Table of Contents**: Added "Settings" menu allowing users to toggle the TOC position (Left/Right). Preference is persisted.
+- **TOC Aesthetics**: Implemented direction-aware active indicator ("slider") and professional gradient styling.
 - **In-Place Editor**: Implemented a rich WYSIWYG editor (Toast UI) allowing direct editing of Markdown files with "Save" and "Cancel" functionality. Includes Safe Mode read-only protection for Word documents.
 
 ### Changed
 - **UI Standardization**: Unified the styling of Theme Toggle, "Back to Hub" buttons, and Icons across Index, Docs, and View pages.
+- **Sidebar Improvements**: Refined Table of Contents with visual hierarchy (tree lines, indentation), direction-aware styling, and a sleek, custom scrollbar.
+
 
 ### Fixed
 - **View Page Edit/Save**: Fixed the "Edit" button selector and rectified backend save logic to support nested document paths.
