@@ -618,6 +618,105 @@
                 padding: var(--space-4);
             }
         }
+
+        .main-content {
+            padding: var(--space-4);
+        }
+
+        /* POS: Right logic for docs.html (Default is left) */
+        .layout-container.toc-right .docs-sidebar {
+            order: 2;
+            border-right: none;
+            border-left: 1px solid var(--color-border-default);
+        }
+
+        /* --- Settings Dropdown & Toggles (Standardized) --- */
+        .settings-dropdown {
+            position: relative;
+        }
+
+        .settings-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border-default);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            min-width: 220px;
+            z-index: 1000;
+            padding: 12px;
+        }
+
+        .settings-menu.show {
+            display: block;
+        }
+
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--color-text-primary);
+        }
+
+        .settings-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-label {
+            font-weight: 500;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            display: flex;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            padding: 2px;
+            cursor: pointer;
+            border: 1px solid var(--color-border-default);
+            position: relative;
+        }
+
+        .toggle-option {
+            padding: 4px 12px;
+            font-size: 12px;
+            border-radius: 16px;
+            color: var(--color-text-muted);
+            transition: all 0.2s;
+            z-index: 2;
+        }
+
+        .toggle-option.active {
+            color: var(--color-text-primary);
+            font-weight: 600;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: calc(50% - 2px);
+            height: calc(100% - 4px);
+            background: var(--color-surface);
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s ease;
+        }
+
+        .toggle-switch[data-value="right"] .toggle-slider {
+            transform: translateX(100%);
+        }
+
+        .toggle-switch[data-value="left"] .toggle-slider {
+            transform: translateX(0%);
+        }
+
+        /* --- Modal CSS Removed from docs.html --- */
     </style>
 </head>
 
@@ -643,9 +742,38 @@
                 </span>
             </div>
 
-            <button class="theme-toggle" aria-label="Toggle theme">
-                <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
-            </button>
+            <!-- Standardized Settings Menu -->
+            <div class="settings-dropdown">
+                <button
+                    style="border: none; background: transparent; color: var(--color-text-secondary); cursor: pointer; font-size: 1.25rem;"
+                    onclick="toggleSettingsMenu()" title="Preferences">
+                    <i class="bi bi-gear-fill"></i>
+                </button>
+
+                <div class="settings-menu" id="settingsMenu">
+                    <div class="settings-item">
+                        <span class="settings-label">Appearance</span>
+                        <!-- Theme Toggle (Embedded) -->
+                        <button class="theme-toggle" aria-label="Toggle theme"
+                            style="border: none; background: transparent; padding: 0; cursor: pointer;"
+                            onclick="ThemeManager.toggle()">
+                            <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                        </button>
+                    </div>
+
+                    <div class="settings-item">
+                        <span class="settings-label">TOC Position</span>
+                        <!-- Toggle -->
+                        <div class="toggle-switch" id="tocToggle" onclick="toggleTocPosition()" data-value="right">
+                            <div class="toggle-slider"></div>
+                            <div class="toggle-option left">Left</div>
+                            <div class="toggle-option right active">Right</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
         </div>
     </nav>
 
@@ -682,6 +810,8 @@
         </main>
     </div>
 
+    <!-- Settings Modal Removed from docs.html -->
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script>
         hljs.highlightAll();
@@ -696,6 +826,60 @@
                 }
             });
         });
+
+        // --- Settings Menu Logic ---
+        function toggleSettingsMenu() {
+            const menu = document.getElementById('settingsMenu');
+            menu.classList.toggle('show');
+        }
+
+        // Close menu on click outside
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.settings-dropdown')) {
+                const menu = document.getElementById('settingsMenu');
+                if (menu) menu.classList.remove('show');
+            }
+        });
+
+        // --- TOC Toggle Logic (Persist Only) ---
+        function toggleTocPosition() {
+            const toggle = document.getElementById('tocToggle');
+            const current = toggle.getAttribute('data-value');
+            const newValue = current === 'right' ? 'left' : 'right';
+            setTocPosition(newValue);
+        }
+
+        function setTocPosition(pos) {
+            const toggle = document.getElementById('tocToggle');
+            const container = document.querySelector('.layout-container');
+
+            if (toggle) {
+                toggle.setAttribute('data-value', pos);
+                toggle.querySelector('.toggle-option.left').classList.toggle('active', pos === 'left');
+                toggle.querySelector('.toggle-option.right').classList.toggle('active', pos === 'right');
+            }
+
+            // Apply Layout
+            if (pos === 'right') {
+                container.classList.add('toc-right');
+            } else {
+                container.classList.remove('toc-right');
+            }
+
+            localStorage.setItem('tocPosition', pos);
+        }
+
+        // Init TOC State
+        document.addEventListener('DOMContentLoaded', () => {
+            const storedPos = localStorage.getItem('tocPosition') || 'right';
+            setTocPosition(storedPos);
+
+            // Sync theme icon
+            const t = localStorage.getItem('theme') || 'light';
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.className = t === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+        });
+
     </script>
     <!-- Shared Theme Manager -->
     <script src="{{ url_for('static', filename='theme.js') }}"></script>

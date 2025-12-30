@@ -57,7 +57,6 @@
             --border: #e2e8f0;
             --border-hover: #cbd5e1;
             --shadow-soft: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
-            --shadow-soft: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
             --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.1);
             --bg-card-hover: rgba(255, 255, 255, 1);
         }
@@ -534,6 +533,92 @@
             border-radius: 99px;
             font-size: 0.75rem;
         }
+
+        /* --- Settings Dropdown & Toggles (Standardized) --- */
+        .settings-dropdown {
+            position: relative;
+        }
+
+        .settings-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-soft);
+            min-width: 220px;
+            z-index: 1000;
+            padding: 12px;
+        }
+
+        .settings-menu.show {
+            display: block;
+        }
+
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        .settings-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-label {
+            font-weight: 500;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            display: flex;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            padding: 2px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .toggle-option {
+            padding: 4px 12px;
+            font-size: 12px;
+            border-radius: 16px;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            z-index: 2;
+        }
+
+        .toggle-option.active {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: calc(50% - 2px);
+            height: calc(100% - 4px);
+            background: var(--bg-surface);
+            border-radius: 16px;
+            box-shadow: var(--shadow-glow);
+            transition: transform 0.2s ease;
+        }
+
+        .toggle-switch[data-value="right"] .toggle-slider {
+            transform: translateX(100%);
+        }
+
+        .toggle-switch[data-value="left"] .toggle-slider {
+            transform: translateX(0%);
+        }
     </style>
 </head>
 
@@ -557,18 +642,39 @@
                 <i class="fas fa-book"></i>
             </a>
 
-            <button class="btn-icon" title="Settings" id="settingsBtn">
-                <i class="fas fa-cog"></i>
+            <button class="btn-icon" title="Workspace Settings" id="settingsBtn">
+                <i class="fas fa-folder-open"></i>
             </button>
 
-            <button class="btn-icon" title="Refresh" onclick="window.location.reload()">
-                <i class="fas fa-sync-alt"></i>
-            </button>
+            <!-- Standardized Settings Menu -->
+            <div class="settings-dropdown">
+                <button class="btn-icon" onclick="toggleSettingsMenu()" title="View Preferences">
+                    <i class="fas fa-cog"></i>
+                </button>
 
-            <!-- Theme Toggle -->
-            <button class="btn-icon" title="Toggle Theme" onclick="ThemeManager.toggle()">
-                <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
-            </button>
+                <div class="settings-menu" id="settingsMenu">
+                    <div class="settings-item">
+                        <span class="settings-label">Appearance</span>
+                        <!-- Theme Toggle (Embedded) -->
+                        <button class="btn-icon"
+                            style="width: 32px; height: 32px; border: none; background: transparent;"
+                            onclick="ThemeManager.toggle()">
+                            <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                        </button>
+                    </div>
+
+                    <div class="settings-item">
+                        <span class="settings-label">TOC Position</span>
+                        <!-- Toggle -->
+                        <div class="toggle-switch" id="tocToggle" onclick="toggleTocPosition()" data-value="right">
+                            <div class="toggle-slider"></div>
+                            <div class="toggle-option left">Left</div>
+                            <div class="toggle-option right active">Right</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
         </div>
     </header>
 
@@ -696,6 +802,10 @@
         function openModal() {
             modal.classList.add('show');
             // Fetch latest config to ensure we have current path
+            if (document.getElementById('settingsMenu')) {
+                document.getElementById('settingsMenu').classList.remove('show');
+            }
+
             fetch('/api/workspaces')
                 .then(r => r.json())
                 .then(data => {
@@ -710,7 +820,10 @@
             modal.classList.remove('show');
         }
 
-        settingsBtn.addEventListener('click', openModal);
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', openModal);
+        }
+
         closeBtn.addEventListener('click', closeModal);
         cancelBtn.addEventListener('click', closeModal);
 
@@ -798,6 +911,49 @@
                 saveBtn.innerHTML = originalText;
                 saveBtn.disabled = false;
             }
+        });
+
+        // --- Settings Menu Logic ---
+        function toggleSettingsMenu() {
+            const menu = document.getElementById('settingsMenu');
+            menu.classList.toggle('show');
+        }
+
+        // Close menu on click outside
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.settings-dropdown')) {
+                const menu = document.getElementById('settingsMenu');
+                if (menu) menu.classList.remove('show');
+            }
+        });
+
+        // --- TOC Toggle Logic (Persist Only) ---
+        function toggleTocPosition() {
+            const toggle = document.getElementById('tocToggle');
+            const current = toggle.getAttribute('data-value');
+            const newValue = current === 'right' ? 'left' : 'right';
+            setTocPosition(newValue);
+        }
+
+        function setTocPosition(pos) {
+            const toggle = document.getElementById('tocToggle');
+            if (toggle) {
+                toggle.setAttribute('data-value', pos);
+                toggle.querySelector('.toggle-option.left').classList.toggle('active', pos === 'left');
+                toggle.querySelector('.toggle-option.right').classList.toggle('active', pos === 'right');
+            }
+            localStorage.setItem('tocPosition', pos);
+        }
+
+        // Init TOC State
+        document.addEventListener('DOMContentLoaded', () => {
+            const storedPos = localStorage.getItem('tocPosition') || 'right';
+            setTocPosition(storedPos);
+
+            // Sync theme icon if present
+            const t = localStorage.getItem('theme') || 'light';
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.className = t === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
         });
     </script>
     <script src="{{ url_for('static', filename='theme.js') }}"></script>

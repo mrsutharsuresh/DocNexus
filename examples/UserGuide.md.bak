@@ -4,10 +4,6 @@
 
 A professional, lightweight web-based markdown documentation viewer with a modern UI, theme toggle, and smart navigation features.
 
-* help
-* *Ok*
-* **Please**
-
 ***
 
 ## Table of Contents
@@ -388,9 +384,6 @@ pip install -r requirements.txt
     ```python
     print("Hello World")
     ```
-
-    ```
-    
     ```
 
 ***

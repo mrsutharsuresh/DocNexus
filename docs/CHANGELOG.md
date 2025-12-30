@@ -23,6 +23,8 @@ All notable changes to this project will be documented in this file.
 - **Workspace Configuration**: Fixed path resolution issues that caused "Workspace not configured" errors.
 - **Documentation Link**: Fixed 404 error by correctly routing to the `docs` directory.
 - **Port Conflict**: Improved startup reliability by handling previous instances.
+- **HTML Stability**: Resolved severe corruption in `view.html`, fixed syntax errors in `docs.html` (malformed braces) and `index.html` (error handling logic).
+- **Code Hygiene**: Removed unused Modal CSS and standardized theme toggle implementation across all pages to eliminate warnings.
 
 ## [v1.0.1] - 2025-12-28
 

@@ -710,40 +710,37 @@
 
 <body>
     <!-- Top Navigation -->
-    <nav
-        style="border-bottom: 1px solid var(--color-border-default); background: var(--color-surface); height: 64px; display: flex; align-items: center; padding: 0 2rem; position: sticky; top: 0; z-index: 100;">
-        <div
-            style="width: 100%; max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+    <nav class="top-nav">
+        <div class="nav-container">
+            <div class="nav-left">
+                <a href="/" class="back-link">
+                    <svg viewBox="0 0 16 16" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
+                    </svg>
+                    Back to Hub
+                </a>
+            </div>
 
-            <!-- Left: Back -->
-            <a href="/" class="back-link">
-                <svg viewBox="0 0 16 16" fill="currentColor" style="width: 16px; height: 16px;">
-                    <path fill-rule="evenodd"
-                        d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
-                </svg>
-                Back to Hub
-            </a>
-
-            <!-- Right: Actions -->
-            <div style="display: flex; gap: 12px; align-items: center;">
+            <div class="nav-right">
+                <!-- Edit Buttons -->
                 {% if not file.get('preview_mode') %}
                 {% if file.filename.endswith('.docx') %}
-                <button class="btn edit-btn disabled" disabled
-                    title="Editing Word documents is not supported in-browser">
+                <button class="edit-btn disabled" disabled title="Editing Word documents is not supported in-browser">
                     <i class="bi bi-pencil-square"></i> Edit
                 </button>
                 {% else %}
-                <button class="btn edit-btn" onclick="toggleEditMode()">
+                <button class="edit-btn" onclick="toggleEditMode()">
                     <i class="bi bi-pencil-square"></i> Edit
                 </button>
                 {% endif %}
                 {% endif %}
 
+                <!-- Export -->
                 <div class="export-dropdown">
-                    <button class="btn export-main-btn" onclick="toggleExportMenu()">
+                    <button class="export-main-btn" onclick="toggleExportMenu()">
                         <i class="bi bi-download"></i> Export
                     </button>
-                    <!-- Dropdown Menu -->
                     <div class="export-dropdown-menu" id="exportMenu">
                         <div class="export-dropdown-item pdf" onclick="exportToPDF()">
                             <i class="bi bi-file-pdf"></i> PDF
@@ -754,15 +751,23 @@
                     </div>
                 </div>
 
-                <!-- Settings Dropdown -->
+                <!-- Settings -->
                 <div class="settings-dropdown">
                     <button class="btn"
                         style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--color-text-muted); padding: 4px 8px;"
-                        onclick="toggleSettingsMenu()">
-                        <i class="bi bi-three-dots-vertical"></i>
+                        onclick="toggleSettingsMenu()" title="Preferences">
+                        <i class="bi bi-gear-fill"></i>
                     </button>
-
                     <div class="settings-menu" id="settingsMenu">
+                        <div class="settings-item">
+                            <span class="settings-label">Appearance</span>
+                            <!-- Theme Toggle -->
+                            <button class="theme-toggle" aria-label="Toggle theme"
+                                style="border: none; background: transparent; padding: 0; cursor: pointer;"
+                                onclick="ThemeManager.toggle()">
+                                <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                            </button>
+                        </div>
                         <div class="settings-item">
                             <span class="settings-label">TOC Position</span>
                             <!-- Toggle -->
@@ -774,12 +779,6 @@
                         </div>
                     </div>
                 </div>
-
-                <div style="height: 24px; width: 1px; background: var(--color-border-default);"></div>
-
-                <button class="theme-toggle" aria-label="Toggle theme">
-                    <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
-                </button>
             </div>
         </div>
     </nav>
@@ -787,18 +786,15 @@
     <!-- Main Content -->
     <div class="main-container">
         <main class="content-area">
-
             <div id="documentContent">
                 <div class="document-header">
                     <div>
                         <h1 class="document-title">{{ file.name }}</h1>
                         <div class="document-path">
-                            <i class="bi bi-folder"></i>
-                            {{ file.filename }}
+                            <i class="bi bi-folder"></i> {{ file.filename }}
                         </div>
                     </div>
                 </div>
-
                 <div class="markdown-content">
                     {{ file.content | safe }}
                 </div>
@@ -852,6 +848,7 @@
 
             // Select headers (H2 and H3)
             const headers = content.querySelectorAll('h2, h3');
+
             if (headers.length === 0) {
                 const sidebar = document.querySelector('.toc-sidebar');
                 if (sidebar) sidebar.style.display = 'none';
@@ -879,6 +876,7 @@
                     // Remove active from all
                     document.querySelectorAll('.toc-link').forEach(l => l.classList.remove('active'));
                     a.classList.add('active');
+
                     // Smooth scroll
                     header.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     // Update URL hash without jumping
@@ -1029,8 +1027,14 @@
         }
 
         // --- Export & Misc ---
-        function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
-        function toggleExportMenu() { document.getElementById('exportMenu').classList.toggle('show'); }
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleExportMenu() {
+            document.getElementById('exportMenu').classList.toggle('show');
+        }
+
         // --- Settings & TOC Logic ---
         function toggleSettingsMenu() {
             const menu = document.getElementById('settingsMenu');
@@ -1058,7 +1062,6 @@
 
             // Update UI State
             toggle.setAttribute('data-value', pos);
-
             toggle.querySelector('.toggle-option.left').classList.toggle('active', pos === 'left');
             toggle.querySelector('.toggle-option.right').classList.toggle('active', pos === 'right');
 
@@ -1083,8 +1086,13 @@
             if (icon) icon.className = t === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
         });
 
-        function exportToPDF() { performExport('/export-pdf', 'pdf'); }
-        function exportToWord() { performExport('/export-word', 'docx'); }
+        function exportToPDF() {
+            performExport('/export-pdf', 'pdf');
+        }
+
+        function exportToWord() {
+            performExport('/export-word', 'docx');
+        }
 
         function performExport(endpoint, ext) {
             const btn = document.querySelector('.export-main-btn');
@@ -1092,32 +1100,27 @@
             btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
 
             const html = document.documentElement.outerHTML;
+
             fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ html: html, filename: currentFilename.replace(/.md$/, '.' + ext) })
-            }).then(r => r.blob()).then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = currentFilename.replace(/.md$/, '.' + ext);
-                a.click();
-                btn.innerHTML = orig;
-            }).catch(e => {
-                alert('Export failed: ' + e);
-                btn.innerHTML = orig;
-            });
+            })
+                .then(r => r.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = currentFilename.replace(/.md$/, '.' + ext);
+                    a.click();
+                    btn.innerHTML = orig;
+                })
+                .catch(e => {
+                    alert('Export failed: ' + e);
+                    btn.innerHTML = orig;
+                });
         }
-
-        // Init icon state on load
-        document.addEventListener('DOMContentLoaded', () => {
-            const t = localStorage.getItem('theme') || 'light';
-            const icon = document.getElementById('themeIcon');
-            if (icon) icon.className = t === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
-        });
     </script>
-
-    <!-- Theme JS last to apply state -->
     <script src="{{ url_for('static', filename='theme.js') }}"></script>
 </body>
 
