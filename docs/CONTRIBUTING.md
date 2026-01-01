@@ -40,6 +40,10 @@ Thank you for your interest in contributing to DocNexus! We welcome contribution
 - Ensure all new code includes docstrings.
 - Add tests for new features.
 
-## License
+## Legal & License
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+### Contributor License Agreement (CLA)
+By submitting a Pull Request, you agree to the terms of our [Contributor License Agreement (CLA)](CLA.md). This agreement grants us the rights to relicense your contributions, which is essential for our dual-licensing business model (Open Core + Commercial). You retain your copyright.
+
+### License
+By contributing, you agree that your contributions will be licensed under the GNU Affero General Public License v3 (AGPLv3).
