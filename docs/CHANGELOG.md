@@ -11,10 +11,12 @@ All notable changes to this project will be documented in this file.
 - **Configurable Table of Contents**: Added "Settings" menu allowing users to toggle the TOC position (Left/Right). Preference is persisted.
 - **TOC Aesthetics**: Implemented direction-aware active indicator ("slider") and professional gradient styling.
 - **In-Place Editor**: Implemented a rich WYSIWYG editor (Toast UI) allowing direct editing of Markdown files with "Save" and "Cancel" functionality. Includes Safe Mode read-only protection for Word documents.
+- **Shared Settings Component**: Centralized the Settings Menu into a reusable component (`settings_menu.html`, `settings_menu.css`) to eliminate code duplication.
 
 ### Changed
 - **UI Standardization**: Unified the styling of Theme Toggle, "Back to Hub" buttons, and Icons across Index, Docs, and View pages.
 - **Sidebar Improvements**: Refined Table of Contents with visual hierarchy (tree lines, indentation), direction-aware styling, and a sleek, custom scrollbar.
+- **Settings Menu Layout**: Enforced 'Outfit' font and Grid layout for the Settings Menu to ensure pixel-perfect consistency and alignment across all pages.
 
 
 ### Fixed
@@ -25,6 +27,8 @@ All notable changes to this project will be documented in this file.
 - **Port Conflict**: Improved startup reliability by handling previous instances.
 - **HTML Stability**: Resolved severe corruption in `view.html`, fixed syntax errors in `docs.html` (malformed braces) and `index.html` (error handling logic).
 - **Code Hygiene**: Removed unused Modal CSS and standardized theme toggle implementation across all pages to eliminate warnings.
+- **TOC Logic**: Fixed critical bug where TOC position toggle failed on `docs.html` due to conflicting default classes.
+- **Visual Alignment**: Resolved spacing and alignment discrepancies in settings submenu toggles.
 
 ## [v1.0.1] - 2025-12-28
 

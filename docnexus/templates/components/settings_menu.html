@@ -1,0 +1,38 @@
+<!-- Shared Settings Menu Component -->
+<div class="settings-dropdown">
+    <button class="settings-trigger" title="Preferences">
+        <i class="fas fa-cog"></i>
+    </button>
+
+    <div class="settings-menu" id="settingsMenu">
+        <!-- Theme Toggle -->
+        <div class="settings-item">
+            <span class="settings-label">Theme</span>
+            <div class="toggle-switch" id="themeToggle" data-value="left">
+                <div class="toggle-slider"></div>
+                <div class="toggle-option active" data-side="left">Dark</div>
+                <div class="toggle-option" data-side="right">Light</div>
+            </div>
+        </div>
+
+        <!-- Font Size Toggle -->
+        <div class="settings-item">
+            <span class="settings-label">Font Size</span>
+            <div class="toggle-switch" id="fontToggle" data-value="left">
+                <div class="toggle-slider"></div>
+                <div class="toggle-option active" data-side="left">Aa</div>
+                <div class="toggle-option" data-side="right">Aa+</div>
+            </div>
+        </div>
+
+        <!-- TOC Position Toggle -->
+        <div class="settings-item">
+            <span class="settings-label">TOC Position</span>
+            <div class="toggle-switch" id="tocToggle" data-value="right">
+                <div class="toggle-slider"></div>
+                <div class="toggle-option" data-side="left">Left</div>
+                <div class="toggle-option active" data-side="right">Right</div>
+            </div>
+        </div>
+    </div>
+</div>

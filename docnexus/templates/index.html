@@ -14,6 +14,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='settings_menu.css') }}">
 
     <style>
         :root {
@@ -534,91 +535,10 @@
             font-size: 0.75rem;
         }
 
-        /* --- Settings Dropdown & Toggles (Standardized) --- */
-        .settings-dropdown {
-            position: relative;
-        }
-
-        .settings-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
-            margin-top: 8px;
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-soft);
-            min-width: 220px;
-            z-index: 1000;
-            padding: 12px;
-        }
-
-        .settings-menu.show {
-            display: block;
-        }
-
-        .settings-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-            font-size: 14px;
-            color: var(--text-main);
-        }
-
-        .settings-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .settings-label {
-            font-weight: 500;
-        }
-
-        /* Toggle Switch */
-        .toggle-switch {
-            display: flex;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 20px;
-            padding: 2px;
-            cursor: pointer;
-            border: 1px solid var(--border);
-            position: relative;
-        }
-
-        .toggle-option {
-            padding: 4px 12px;
-            font-size: 12px;
-            border-radius: 16px;
-            color: var(--text-muted);
-            transition: all 0.2s;
-            z-index: 2;
-        }
-
-        .toggle-option.active {
-            color: var(--text-main);
-            font-weight: 600;
-        }
-
-        .toggle-slider {
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: calc(50% - 2px);
-            height: calc(100% - 4px);
-            background: var(--bg-surface);
-            border-radius: 16px;
-            box-shadow: var(--shadow-glow);
-            transition: transform 0.2s ease;
-        }
-
-        .toggle-switch[data-value="right"] .toggle-slider {
-            transform: translateX(100%);
-        }
-
         .toggle-switch[data-value="left"] .toggle-slider {
             transform: translateX(0%);
         }
+
 
         /* Theme Slider Specific */
         .toggle-switch[data-value="dark"] .toggle-slider {
@@ -655,36 +575,8 @@
                 <i class="fas fa-folder-open"></i>
             </button>
 
-            <!-- Standardized Settings Menu -->
-            <div class="settings-dropdown">
-                <button class="btn-icon" onclick="toggleSettingsMenu()" title="View Preferences">
-                    <i class="fas fa-cog"></i>
-                </button>
-
-                <div class="settings-menu" id="settingsMenu">
-                    <div class="settings-item">
-                        <span class="settings-label">Appearance</span>
-                        <!-- Theme Toggle (Embedded) -->
-                        <!-- Theme Slider -->
-                        <div class="toggle-switch" id="themeToggle">
-                            <div class="toggle-slider"></div>
-                            <div class="toggle-option left">Light</div>
-                            <div class="toggle-option right">Dark</div>
-                        </div>
-                    </div>
-
-                    <div class="settings-item">
-                        <span class="settings-label">TOC Position</span>
-                        <!-- Toggle -->
-                        <div class="toggle-switch" id="tocToggle" onclick="toggleTocPosition()" data-value="right">
-                            <div class="toggle-slider"></div>
-                            <div class="toggle-option left">Left</div>
-                            <div class="toggle-option right active">Right</div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
+            <!-- Settings Dropdown (Shared Component) -->
+            {% include 'components/settings_menu.html' %}
         </div>
     </header>
 

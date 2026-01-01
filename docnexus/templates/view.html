@@ -30,6 +30,7 @@
 
     <!-- Shared Theme -->
     <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='settings_menu.css') }}">
 
     <!-- KaTeX -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -39,21 +40,6 @@
 
     <style>
         /* View Page Specific Styles */
-        :root {
-            /* Index Match Variables (Light) */
-            --border-index: #e2e8f0;
-            --bg-surface-index: #ffffff;
-            --shadow-soft-index: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
-            --shadow-glow-index: 0 0 20px rgba(99, 102, 241, 0.1);
-        }
-
-        [data-theme="dark"] {
-            /* Index Match Variables (Dark) */
-            --border-index: rgba(255, 255, 255, 0.08);
-            --bg-surface-index: #1e293b;
-            --shadow-soft-index: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
-            --shadow-glow-index: 0 0 20px rgba(99, 102, 241, 0.15);
-        }
 
         /* Layout adjustments */
         html,
@@ -557,148 +543,7 @@
             color: var(--color-accent-primary);
         }
 
-        /* Settings Dropdown (Uniform with index.html) */
-        .btn-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-index);
-            color: var(--color-text-primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            padding: 0;
-        }
 
-        .btn-icon:hover {
-            background: var(--color-surface-hover);
-            border-color: var(--color-accent-primary);
-            color: var(--color-accent-primary);
-            transform: translateY(-1px);
-        }
-
-        .settings-dropdown {
-            position: relative;
-        }
-
-        .settings-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
-            margin-top: 8px;
-            background: var(--bg-surface-index);
-            border: 1px solid var(--border-index);
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-soft-index);
-            /* Soft shadow from index */
-            min-width: 220px;
-            z-index: 1000;
-            padding: 12px;
-        }
-
-        .settings-menu.show {
-            display: block;
-            animation: fadeIn 0.2s ease;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(5px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .settings-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-            font-size: 14px;
-            color: var(--color-text-primary);
-        }
-
-        .settings-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .settings-label {
-            font-weight: 500;
-        }
-
-        /* Toggle Switch (Uniform) */
-        .toggle-switch {
-            display: flex;
-            background: rgba(0, 0, 0, 0.2);
-            /* Index style */
-            border-radius: 20px;
-            padding: 2px;
-            cursor: pointer;
-            border: 1px solid var(--border-index);
-            position: relative;
-        }
-
-        .toggle-option {
-            padding: 4px 12px;
-            font-size: 12px;
-            border-radius: 16px;
-            color: var(--color-text-muted);
-            transition: all 0.2s;
-            z-index: 2;
-        }
-
-        .toggle-option.active {
-            color: var(--color-text-primary);
-            font-weight: 600;
-        }
-
-        .toggle-slider {
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: calc(50% - 2px);
-            height: calc(100% - 4px);
-            background: var(--bg-surface-index);
-            border-radius: 16px;
-            box-shadow: var(--shadow-glow-index);
-            /* Glow from index */
-            transition: transform 0.2s ease;
-        }
-
-        .toggle-switch[data-value="right"] .toggle-slider {
-            transform: translateX(100%);
-        }
-
-        .toggle-switch[data-value="left"] .toggle-slider {
-            transform: translateX(0);
-        }
-
-        /* Theme Slider Specific */
-        .toggle-switch[data-value="dark"] .toggle-slider {
-            transform: translateX(100%);
-        }
-
-        .toggle-switch[data-value="light"] .toggle-slider {
-            transform: translateX(0%);
-        }
-
-        /* Theme Slider Specific */
-        .toggle-switch[data-value="dark"] .toggle-slider {
-            transform: translateX(100%);
-        }
-
-        .toggle-switch[data-value="light"] .toggle-slider {
-            transform: translateX(0%);
-        }
 
         /* TOC Positioning Logic */
         .main-container.toc-left .toc-sidebar {
@@ -823,32 +668,8 @@
                     </div>
                 </div>
 
-                <!-- Settings -->
-                <div class="settings-dropdown">
-                    <button class="btn-icon" onclick="toggleSettingsMenu()" title="Preferences">
-                        <i class="fas fa-cog"></i>
-                    </button>
-                    <div class="settings-menu" id="settingsMenu">
-                        <div class="settings-item">
-                            <span class="settings-label">Appearance</span>
-                            <!-- Theme Slider -->
-                            <div class="toggle-switch" id="themeToggle">
-                                <div class="toggle-slider"></div>
-                                <div class="toggle-option left">Light</div>
-                                <div class="toggle-option right">Dark</div>
-                            </div>
-                        </div>
-                        <div class="settings-item">
-                            <span class="settings-label">TOC Position</span>
-                            <!-- Toggle -->
-                            <div class="toggle-switch" id="tocToggle" onclick="toggleTocPosition()" data-value="right">
-                                <div class="toggle-slider"></div>
-                                <div class="toggle-option left">Left</div>
-                                <div class="toggle-option right active">Right</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <!-- Settings (Shared) -->
+                {% include 'components/settings_menu.html' %}
             </div>
         </div>
     </nav>
@@ -1105,52 +926,12 @@
             document.getElementById('exportMenu').classList.toggle('show');
         }
 
-        // --- Settings & TOC Logic ---
-        function toggleSettingsMenu() {
-            const menu = document.getElementById('settingsMenu');
-            menu.classList.toggle('show');
-            // Close export if open
-            document.getElementById('exportMenu').classList.remove('show');
-        }
-
         // Close menus on click outside
         document.addEventListener('click', e => {
-            if (!e.target.closest('.settings-dropdown')) document.getElementById('settingsMenu').classList.remove('show');
             if (!e.target.closest('.export-dropdown')) document.getElementById('exportMenu').classList.remove('show');
         });
 
-        function toggleTocPosition() {
-            const toggle = document.getElementById('tocToggle');
-            const current = toggle.getAttribute('data-value');
-            const newValue = current === 'right' ? 'left' : 'right';
-            setTocPosition(newValue);
-        }
-
-        function setTocPosition(pos) {
-            const toggle = document.getElementById('tocToggle');
-            const container = document.querySelector('.main-container');
-
-            // Update UI State
-            toggle.setAttribute('data-value', pos);
-            toggle.querySelector('.toggle-option.left').classList.toggle('active', pos === 'left');
-            toggle.querySelector('.toggle-option.right').classList.toggle('active', pos === 'right');
-
-            // Apply Layout
-            if (pos === 'left') {
-                container.classList.add('toc-left');
-            } else {
-                container.classList.remove('toc-left');
-            }
-
-            // Save Preference
-            localStorage.setItem('tocPosition', pos);
-        }
-
-        // Init TOC Position
-        document.addEventListener('DOMContentLoaded', () => {
-            const storedPos = localStorage.getItem('tocPosition') || 'right';
-            setTocPosition(storedPos);
-        });
+        // Settings and TOC are now handled by theme.js
 
         function exportToPDF() {
             performExport('/export-pdf', 'pdf');

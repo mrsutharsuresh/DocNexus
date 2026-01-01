@@ -1,0 +1,178 @@
+/* Shared Settings Menu Styles */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+/* Extracted from index.html for consistency */
+
+:root {
+    /* Component Variables - Index Match (Light) */
+    --settings-bg: #ffffff;
+    --settings-border: #e2e8f0;
+    --settings-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+    --settings-text: #0f172a;
+    --settings-text-muted: #64748b;
+    --settings-hover: #cbd5e1;
+    --settings-accent: #6366f1;
+    --settings-glow: 0 0 20px rgba(99, 102, 241, 0.1);
+    --settings-radius: 12px;
+}
+
+[data-theme="dark"] {
+    /* Component Variables - Index Match (Dark) */
+    --settings-bg: #1e293b;
+    --settings-border: rgba(255, 255, 255, 0.08);
+    --settings-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+    --settings-text: #f8fafc;
+    --settings-text-muted: #94a3b8;
+    --settings-hover: #334155;
+    --settings-glow: 0 0 20px rgba(99, 102, 241, 0.15);
+}
+
+/* --- Settings Dropdown & Toggles (Standardized) --- */
+.settings-dropdown {
+    position: relative;
+    display: inline-block;
+    /* Ensure it behaves well in any container */
+}
+
+/* Button Styling matching index.html */
+.settings-trigger {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    /* Fixed glass effect always */
+    border: 1px solid var(--settings-border);
+    color: var(--settings-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    padding: 0;
+    outline: none;
+}
+
+.settings-trigger:hover {
+    background: var(--settings-hover);
+    border-color: var(--settings-accent);
+    color: var(--settings-accent);
+    transform: translateY(-1px);
+}
+
+.settings-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: var(--settings-bg);
+    border: 1px solid var(--settings-border);
+    border-radius: var(--settings-radius);
+    box-shadow: var(--settings-shadow);
+    min-width: 260px;
+    /* Increased width for better spacing */
+    z-index: 1000;
+    padding: 16px;
+    /* Increased padding */
+    text-align: left;
+    /* Reset alignment */
+    font-family: 'Outfit', sans-serif !important;
+    /* Force correct font */
+}
+
+.settings-menu.show {
+    display: block;
+    animation: fadeInMenu 0.2s ease;
+}
+
+@keyframes fadeInMenu {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.settings-item {
+    display: grid;
+    grid-template-columns: 1fr 140px;
+    /* Fixed width for toggles column */
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: var(--settings-text);
+}
+
+.settings-item:last-child {
+    margin-bottom: 0;
+}
+
+.settings-label {
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    display: flex;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+    padding: 2px;
+    cursor: pointer;
+    border: 1px solid var(--settings-border);
+    position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    /* Fill the grid cell */
+    height: 32px;
+    /* Fixed height */
+}
+
+.toggle-option {
+    flex: 1;
+    /* Equal width buttons */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    border-radius: 16px;
+    color: var(--settings-text-muted);
+    transition: all 0.2s;
+    z-index: 2;
+    position: relative;
+    user-select: none;
+    font-weight: 500;
+}
+
+.toggle-option.active {
+    color: var(--settings-text);
+    font-weight: 600;
+}
+
+.toggle-slider {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: calc(50% - 2px);
+    /* Corrected calc */
+    height: calc(100% - 4px);
+    background: var(--settings-bg);
+    border-radius: 16px;
+    box-shadow: var(--settings-glow);
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+}
+
+.toggle-switch[data-value="right"] .toggle-slider {
+    transform: translateX(100%);
+}
+
+.toggle-switch[data-value="left"] .toggle-slider {
+    transform: translateX(0%);
+}
