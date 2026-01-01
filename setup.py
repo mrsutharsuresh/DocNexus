@@ -48,7 +48,7 @@ setup(
         'Topic :: Documentation',
         'Topic :: Software Development :: Documentation',
         'Topic :: Text Processing :: Markup',
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)',
         'Intended Audience :: Information Technology',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.10',
@@ -63,7 +63,6 @@ setup(
     python_requires='>=3.10',
     install_requires=read_requirements(),
     entry_points={
-        'console_scripts': [
         'console_scripts': [
             'docnexus=docnexus.cli:main',
         ],

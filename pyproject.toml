@@ -8,7 +8,7 @@ version = "1.0.0"
 description = "OmniDoc - The Ultimate All-in-One Document Engine"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "MIT License"}
+license = {text = "GNU Affero General Public License v3 (AGPLv3)"}
 authors = [
     {name = "OmniDoc Maintainers", email = "maintainers@omnidoc.org"}
 ]
@@ -20,7 +20,7 @@ classifiers = [
     "Topic :: Documentation",
     "Topic :: Software Development :: Documentation",
     "Topic :: Text Processing :: Markup",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     "Intended Audience :: Information Technology",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
@@ -49,20 +49,20 @@ dev = [
 ]
 
 [project.scripts]
-omnidoc = "omnidoc.cli:main"
+docnexus = "docnexus.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/omnidoc-org/omnidoc"
-Documentation = "https://github.com/omnidoc-org/omnidoc/tree/main/doc"
-Repository = "https://github.com/omnidoc-org/omnidoc.git"
-Changelog = "https://github.com/omnidoc-org/omnidoc/blob/main/doc/CHANGELOG.md"
-"Bug Tracker" = "https://github.com/omnidoc-org/omnidoc/issues"
+Homepage = "https://github.com/omnidoc-org/docnexus"
+Documentation = "https://github.com/omnidoc-org/docnexus/tree/main/docs"
+Repository = "https://github.com/omnidoc-org/docnexus.git"
+Changelog = "https://github.com/omnidoc-org/docnexus/blob/main/docs/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/omnidoc-org/docnexus/issues"
 
 [tool.setuptools]
-packages = ["omnidoc", "omnidoc.core", "omnidoc.features"]
+packages = ["docnexus", "docnexus.core", "docnexus.features"]
 
 [tool.setuptools.package-data]
-omnidoc = ["templates/*.html"]
+docnexus = ["templates/*.html"]
 
 [tool.black]
 line-length = 100
