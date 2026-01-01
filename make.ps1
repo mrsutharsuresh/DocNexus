@@ -7,6 +7,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$ConfirmPreference = "None"
 
 # Configuration
 $ProjectRoot = $PSScriptRoot
@@ -125,7 +126,7 @@ function Invoke-Release {
     # Copy executable from build/output
     $ExePath = "$ProjectRoot\build\output\DocNexus_v$Version.exe"
     if (Test-Path $ExePath) {
-        Copy-Item $ExePath $ArchiveDir\
+        Copy-Item $ExePath $ArchiveDir\ -Force
     }
     else {
         Write-Host "ERROR: Executable not found at $ExePath" -ForegroundColor Red
@@ -133,10 +134,10 @@ function Invoke-Release {
     }
     
     # Copy documentation
-    Copy-Item "$ProjectRoot\VERSION" $ArchiveDir\
-    Copy-Item "$ProjectRoot\README.md" $ArchiveDir\
-    Copy-Item "$ProjectRoot\RELEASE_NOTES_v$Version.md" $ArchiveDir\ -ErrorAction SilentlyContinue
-    Copy-Item -Recurse "$ProjectRoot\docs" $ArchiveDir\
+    Copy-Item "$ProjectRoot\VERSION" $ArchiveDir\ -Force
+    Copy-Item "$ProjectRoot\README.md" $ArchiveDir\ -Force
+    Copy-Item "$ProjectRoot\RELEASE_NOTES_v$Version.md" $ArchiveDir\ -Force -ErrorAction SilentlyContinue
+    Copy-Item -Recurse "$ProjectRoot\docs" $ArchiveDir\ -Force
     
     # Create workspace in release
     New-Item -ItemType Directory -Path "$ArchiveDir\workspace" -Force | Out-Null
@@ -165,7 +166,8 @@ function Invoke-Release {
     # Update latest junction (Windows symlink equivalent)
     $LatestLink = "$ProjectRoot\dist\latest"
     if (Test-Path $LatestLink) {
-        Remove-Item $LatestLink -Force
+        # Use cmd to remove junction safely without deleting target contents or prompting
+        cmd /c rmdir "$LatestLink"
     }
     
     cmd /c mklink /J "$LatestLink" "$ArchiveDir" 2>&1 | Out-Null
@@ -194,6 +196,9 @@ function Invoke-Release {
 }
 
 function Invoke-Start {
+    # Auto-stop any running instances first
+    Invoke-Stop
+
     Write-Host "Starting latest release..." -ForegroundColor Yellow
     Write-Host ""
     
