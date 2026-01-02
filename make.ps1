@@ -42,6 +42,7 @@ function Show-Help {
     Write-Host "  make clean-all   - Clean everything" -ForegroundColor Gray
     Write-Host "  make test        - Run tests" -ForegroundColor Gray
     Write-Host "  make run         - Run from source (dev)" -ForegroundColor Gray
+    Write-Host "  make freeze      - Freeze deps to requirements.lock" -ForegroundColor Gray
     Write-Host "  make help        - Show this help" -ForegroundColor Gray
     Write-Host ""
     Write-Host "Quick Start:" -ForegroundColor Yellow
@@ -279,6 +280,24 @@ function Invoke-Test {
     }
 }
 
+function Invoke-Freeze {
+    Write-Host "Freezing dependencies..." -ForegroundColor Yellow
+    
+    if (Test-Path $Python) {
+        # Save exact versions to requirements.lock for reproducibility
+        & $Python -m pip freeze > "$ProjectRoot\requirements.lock"
+        Write-Host "Dependencies frozen to requirements.lock" -ForegroundColor Green
+        
+        # Verify no missing dependencies
+        Write-Host "Verifying environment consistency..." -ForegroundColor Gray
+        & $Python -m pip check
+    }
+    else {
+        Write-Host "ERROR: Build venv not found. Run '.\make.ps1 setup' first" -ForegroundColor Red
+        exit 1
+    }
+}
+
 function Invoke-Run {
     Write-Host "Starting development server..." -ForegroundColor Yellow
     Write-Host ""
@@ -304,6 +323,7 @@ switch ($Target.ToLower()) {
     "clean-all" { Invoke-CleanAll }
     "test" { Invoke-Test }
     "run" { Invoke-Run }
+    "freeze" { Invoke-Freeze }
     default {
         Write-Host "ERROR: Unknown target '$Target'" -ForegroundColor Red
         Write-Host ""

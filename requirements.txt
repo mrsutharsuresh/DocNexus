@@ -4,3 +4,4 @@ beautifulsoup4
 pdfkit
 requests
 python-pptx
+pymdown-extensions
