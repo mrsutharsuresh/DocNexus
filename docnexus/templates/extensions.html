@@ -62,13 +62,13 @@
             </div>
         </div>
 
-        <!-- Filters (Visual Only for v1.2) -->
+        <!-- Filters -->
         <div style="display:flex; gap:12px; margin-bottom: 32px; overflow-x: auto;">
-            <button class="filter-btn active">Featured</button>
-            <button class="filter-btn">Most Popular</button>
-            <button class="filter-btn">Export Tools</button>
-            <button class="filter-btn">Themes</button>
-            <button class="filter-btn">Installed</button>
+            <button class="filter-btn active" onclick="filterPlugins(this, 'all')">All</button>
+            <button class="filter-btn" onclick="filterPlugins(this, 'featured')">Featured</button>
+            <button class="filter-btn" onclick="filterPlugins(this, 'export')">Export Tools</button>
+            <button class="filter-btn" onclick="filterPlugins(this, 'theme')">Themes</button>
+            <button class="filter-btn" onclick="filterPlugins(this, 'installed')">Installed</button>
         </div>
 
         <div class="extensions-grid" id="pluginGrid">
@@ -82,6 +82,8 @@
 
     <script>
         // Separate JS logic for Extensions Page
+        let allPlugins = []; // Store fetched plugins
+
         document.addEventListener('DOMContentLoaded', () => {
             // Simulate slight network delay for effect
             // Ensure theme manager init is called if not handled by script below (it is)
@@ -92,12 +94,14 @@
             try {
                 // Mock Registry Fetch for v1.2.0 Demo
                 // In production, this calls /api/plugins/registry
-                const plugins = [
+                allPlugins = [
                     {
                         id: 'pdf-pro',
                         name: 'PDF Professional',
                         author: 'DocNexus Official',
                         downloads: '450k',
+                        category: 'export',
+                        tags: ['featured'],
                         desc: 'Advanced export engine for generating high-fidelity PDFs using WebKit. Supports CSS print media and page breaks.',
                         icon: 'fa-file-pdf',
                         enabled: false,
@@ -108,21 +112,69 @@
                         name: 'PowerPoint Connect',
                         author: 'DocNexus Official',
                         downloads: '120k',
+                        category: 'export',
+                        tags: ['featured'],
                         desc: 'Seamlessly convert your Markdown documentation into editable PowerPoint slides. Requires authentication.',
                         icon: 'fa-file-powerpoint',
                         enabled: false,
                         verified: true
+                    },
+                    {
+                        id: 'tokyo-night',
+                        name: 'Tokyo Night Theme',
+                        author: 'Community',
+                        downloads: '85k',
+                        category: 'theme',
+                        tags: [],
+                        desc: 'A clean, dark Visual Studio Code theme that celebrates the lights of Downtown Tokyo at night.',
+                        icon: 'fa-moon',
+                        enabled: false,
+                        verified: false
                     }
                 ];
 
-                renderPlugins(plugins);
+                renderPlugins(allPlugins);
             } catch (err) {
                 console.error(err);
             }
         }
 
+        function filterPlugins(btn, category) {
+            // Update UI
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Filter Data
+            if (category === 'all') {
+                renderPlugins(allPlugins);
+            } else if (category === 'featured') {
+                // Filter by tag
+                const filtered = allPlugins.filter(p => p.tags && p.tags.includes('featured'));
+                renderPlugins(filtered);
+            } else if (category === 'installed') {
+                // Filter by enabled state for demo
+                const filtered = allPlugins.filter(p => p.enabled);
+                renderPlugins(filtered);
+            } else {
+                // Filter by category property
+                const filtered = allPlugins.filter(p => p.category === category);
+                renderPlugins(filtered);
+            }
+        }
+
         function renderPlugins(plugins) {
             const grid = document.getElementById('pluginGrid');
+
+            if (plugins.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 4rem; opacity: 0.7;">
+                        <i class="fas fa-box-open" style="font-size: 2rem; color: var(--color-text-muted);"></i>
+                        <p style="margin-top: 1rem; color: var(--color-text-muted);">No extensions found in this category.</p>
+                    </div>
+                `;
+                return;
+            }
+
             grid.innerHTML = plugins.map(p => `
                 <div class="extension-card">
                     <div class="card-header">
