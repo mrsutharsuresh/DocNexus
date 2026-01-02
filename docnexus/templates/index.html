@@ -212,35 +212,7 @@
             box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
         }
 
-        .btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: var(--radius-md);
-            padding: 0.75rem 1.5rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: var(--text-muted);
-        }
+        /* .btn styles moved to theme.css */
 
         .modal-footer {
             display: flex;
@@ -573,7 +545,7 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" id="cancelSettings">Cancel</button>
-                    <button type="submit" class="btn" id="saveSettings">
+                    <button type="submit" class="btn btn-primary" id="saveSettings">
                         <i class="fas fa-save"></i> Save Changes
                     </button>
                 </div>

@@ -17,6 +17,9 @@ All notable changes to this project will be documented in this file.
 - **Runtime Stability**: Fixed `TemplateNotFound` crash in standalone executable by correcting Flask path resolution for frozen environments.
 - **Distribution**: Fixed missing `examples` and `docs` folders in the built executable.
 - **Build System**: Removed interactive prompts from build script for cleaner automation.
+- **Build System**: Added auto-kill logic to terminate previous instances before building.
+- **Build System**: Added `--log` flag to capture build output to `build/build.log`.
+- **UI**: Fixed visibility issue for "Save Changes" button in Workspace Settings (Light Mode).
 
 
 

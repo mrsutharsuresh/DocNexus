@@ -35,17 +35,40 @@ class Colors:
         except ImportError:
             pass
 
+# --- Globals ---
+LOG_FILE_HANDLE = None
+
 def log(msg, color=Colors.OKBLUE):
+    """Log message to console and optionally to file."""
+    # Console output with color
     print(f"{color}{msg}{Colors.ENDC}")
+    
+    # File output (clean text)
+    if LOG_FILE_HANDLE:
+        try:
+            # Strip ANSI codes for log file
+            clean_msg = msg
+            LOG_FILE_HANDLE.write(f"{clean_msg}\n")
+            LOG_FILE_HANDLE.flush()
+        except Exception:
+            pass
 
 def run(cmd, cwd=PROJECT_ROOT, capture=False):
     """Run a command safely."""
     cmd_str = " ".join([str(x) for x in cmd])
     log(f"Running: {cmd_str}", Colors.OKCYAN)
+    
+    # Determine stdout/stderr targets
+    stdout_target = LOG_FILE_HANDLE if LOG_FILE_HANDLE else None
+    stderr_target = LOG_FILE_HANDLE if LOG_FILE_HANDLE else None
+
     try:
         if capture:
             return subprocess.check_output(cmd, cwd=cwd, text=True)
-        return subprocess.check_call(cmd, cwd=cwd)
+        
+        # If logging to file, we redirect stdout/stderr there. 
+        # Note: This effectively silences console output for the subprocess.
+        return subprocess.check_call(cmd, cwd=cwd, stdout=stdout_target, stderr=stderr_target)
     except subprocess.CalledProcessError as e:
         log(f"Error running command: {cmd_str}", Colors.FAIL)
         sys.exit(e.returncode)
@@ -68,7 +91,7 @@ def setup():
     # 1. Create Venv
     if not VENV_DIR.exists():
         log(f"Creating venv at {VENV_DIR}", Colors.OKGREEN)
-        subprocess.check_call([sys.executable, "-m", "venv", str(VENV_DIR)])
+        subprocess.check_call([sys.executable, "-m", "venv", str(VENV_DIR)], stdout=LOG_FILE_HANDLE, stderr=LOG_FILE_HANDLE)
     else:
         log("Venv already exists.", Colors.OKGREEN)
 
@@ -80,11 +103,21 @@ def setup():
     
     log("Setup complete!", Colors.BOLD)
 
+def kill_existing_process(app_name):
+    """Kill the running executable if it exists."""
+    exe_name = f"{app_name}.exe" if IS_WINDOWS else app_name
+    log(f"Ensuring {exe_name} is not running...", Colors.WARNING)
+    try:
+        if IS_WINDOWS:
+            subprocess.call(["taskkill", "/F", "/IM", exe_name], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        else:
+            subprocess.call(["pkill", "-f", exe_name], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    except Exception:
+        pass
+
 def build():
     """Build the standalone executable."""
-    log("Building DocNexus...")
-    
-    # Get Version
+    # Get Version (duplicate logic, but needed for name)
     try:
         init_file = PROJECT_ROOT / "docnexus" / "__init__.py"
         with open(init_file) as f:
@@ -94,8 +127,11 @@ def build():
                     break
     except Exception:
         version = "0.0.0"
-        
     app_name = f"DocNexus_v{version}"
+    
+    kill_existing_process(app_name)
+    
+    log("Building DocNexus...")
     
     # Base PyInstaller Args
     cmd = [
@@ -133,16 +169,7 @@ def build():
         log(" [PREMIUM] Detected plugins_dev. Including in build...", Colors.OKGREEN)
         cmd.extend(["--add-data", f"{plugins_dev}{os.pathsep}docnexus/plugins_dev"])
         
-        # We need the hook to be visible. PyInstaller looks in current dir? 
-        # Or we can specify --additional-hooks-dir.
-        # Let's assume the hook file inside build/ is sufficient if we point the hook path there.
-        # But simpler: PyInstaller's `hook-docnexus.plugins_dev.py` mechanism works via
-        # runtime hook or just hidden import discovery if configured.
-        # The previous Powershell script relied on just existence.
-        # To be robust, let's allow PyInstaller to just find it via sys.path (cmd includes PROJECT_ROOT)
-    
     # Entry Point
-    # cmd.extend(["--runtime-hook", str(BUILD_DIR / 'rthook_flask.py')])
     cmd.append(str(PROJECT_ROOT / "docnexus" / "app.py"))
     
     run(cmd)
@@ -181,8 +208,10 @@ def run_dev():
 # --- Main CLI ---
 
 def main():
+    global LOG_FILE_HANDLE
     parser = argparse.ArgumentParser(description="DocNexus Build System")
     parser.add_argument("command", choices=["setup", "build", "clean", "run", "release"], help="Command to run")
+    parser.add_argument("--log", action="store_true", help="Enable logging to build/build.log")
     
     if len(sys.argv) < 2:
         parser.print_help()
@@ -190,19 +219,28 @@ def main():
         
     args = parser.parse_args()
     
-    if args.command == "setup":
-        setup()
-    elif args.command == "clean":
-        clean()
-    elif args.command == "build":
-        if not PYTHON_EXEC.exists():
-            print("Error: Venv not found. Run 'setup' first.")
-            sys.exit(1)
-        build()
-    elif args.command == "run":
-        run_dev()
-    elif args.command == "release":
-        release()
+    if args.log:
+        log_path = BUILD_DIR / "build.log"
+        print(f"Logging enabled. Writing to {log_path}")
+        LOG_FILE_HANDLE = open(log_path, "w", encoding="utf-8")
+
+    try:
+        if args.command == "setup":
+            setup()
+        elif args.command == "clean":
+            clean()
+        elif args.command == "build":
+            if not PYTHON_EXEC.exists():
+                print("Error: Venv not found. Run 'setup' first.")
+                sys.exit(1)
+            build()
+        elif args.command == "run":
+            run_dev()
+        elif args.command == "release":
+            release()
+    finally:
+        if LOG_FILE_HANDLE:
+            LOG_FILE_HANDLE.close()
 
 if __name__ == "__main__":
     main()
