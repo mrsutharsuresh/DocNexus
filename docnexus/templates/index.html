@@ -548,6 +548,15 @@
                 <input type="text" id="searchInput" placeholder="Search documents...">
             </div>
 
+            <button class="btn-icon" title="Browse File" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-file-upload"></i>
+            </button>
+
+            <form id="previewForm" action="/preview" method="POST" enctype="multipart/form-data" style="display:none;">
+                <input type="file" name="file" id="fileInput" accept=".md,.markdown,.docx,.txt"
+                    onchange="document.getElementById('previewForm').submit()">
+            </form>
+
             <a href="{{ url_for('documentation') }}" class="btn-icon" title="Documentation">
                 <i class="fas fa-book"></i>
             </a>

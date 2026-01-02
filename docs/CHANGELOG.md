@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.1.3] - 2026-01-02
+
+### Added
+- **Open Single File**: Added "Open File" button (Browse File) in the header to view specific documents without changing the workspace.
+- **File Preview**: Implemented `/preview` support for dragging/dropping or selecting single files.
+
+
+
 ## [v1.1.2] - 2026-01-02
 
 ### Added
