@@ -14,6 +14,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='settings_menu.css') }}">
 
     <style>
@@ -191,27 +192,7 @@
             color: rgba(148, 163, 184, 0.5);
         }
 
-        .btn-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-        }
-
-        .btn-icon:hover {
-            background: var(--bg-surface);
-            border-color: var(--primary);
-            color: var(--primary);
-            transform: translateY(-1px);
-        }
+        /* .btn-icon styles moved to theme.css */
 
         /* --- Modal --- */
         .modal-overlay {

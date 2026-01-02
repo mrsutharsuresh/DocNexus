@@ -6,22 +6,22 @@
     --color-bg-tertiary: #e7e5e4;
     --color-surface: #ffffff;
     --color-surface-hover: #fafaf9;
-    
+
     --color-text-primary: #0c0a09;
     --color-text-secondary: #44403c;
     --color-text-muted: #78716c;
     --color-text-link: #6366f1;
     --color-text-link-hover: #4f46e5;
-    
+
     --color-border-default: #e7e5e4;
     --color-border-muted: #f5f5f4;
-    
+
     --color-accent-primary: #6366f1;
     --color-accent-emphasis: #4f46e5;
     --color-success: #16a34a;
     --color-attention: #ea580c;
     --color-danger: #dc2626;
-    
+
     /* Modern Gradients */
     --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
     --gradient-success: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
@@ -31,7 +31,7 @@
     --gradient-pink: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
     --gradient-blue: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
     --gradient-indigo: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
-    
+
     /* Spacing System (8pt grid) */
     --space-1: 4px;
     --space-2: 8px;
@@ -40,7 +40,7 @@
     --space-5: 32px;
     --space-6: 48px;
     --space-7: 64px;
-    
+
     /* Typography */
     --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     --font-mono: 'JetBrains Mono', 'Consolas', monospace;
@@ -52,17 +52,17 @@
     --font-size-2xl: 24px;
     --font-size-3xl: 32px;
     --font-size-4xl: 40px;
-    
+
     --line-height-tight: 1.3;
     --line-height-normal: 1.5;
     --line-height-relaxed: 1.6;
-    
+
     /* Borders & Radius */
     --radius-sm: 6px;
     --radius-md: 8px;
     --radius-lg: 12px;
     --radius-xl: 16px;
-    
+
     /* Shadows */
     --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
@@ -76,22 +76,22 @@
     --color-bg-tertiary: #334155;
     --color-surface: #1e293b;
     --color-surface-hover: #334155;
-    
+
     --color-text-primary: #f1f5f9;
     --color-text-secondary: #cbd5e1;
     --color-text-muted: #94a3b8;
     --color-text-link: #818cf8;
     --color-text-link-hover: #a5b4fc;
-    
+
     --color-border-default: #334155;
     --color-border-muted: #1e293b;
-    
+
     --color-accent-primary: #818cf8;
     --color-accent-emphasis: #a5b4fc;
     --color-success: #34d399;
     --color-attention: #fbbf24;
     --color-danger: #f87171;
-    
+
     /* Same gradients work in dark mode */
     --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
@@ -101,7 +101,7 @@
     --gradient-pink: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
     --gradient-blue: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
     --gradient-indigo: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
-    
+
     --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.3);
     --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
@@ -225,4 +225,38 @@ body {
 .back-link svg {
     width: 16px;
     height: 16px;
+}
+
+/* Components - Icon Buttons (Shared) */
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-border-default);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 1.1rem;
+    padding: 0;
+    text-decoration: none;
+}
+
+.btn-icon:hover {
+    background: var(--color-surface-hover);
+    border-color: var(--color-accent-primary);
+    color: var(--color-accent-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-icon:disabled,
+.btn-icon.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+    background: var(--color-bg-secondary);
 }

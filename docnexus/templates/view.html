@@ -407,37 +407,7 @@
         }
 
         /* Editor specific buttons */
-        .edit-btn,
-        .export-main-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 16px;
-            background: var(--color-surface);
-            border: 1px solid var(--color-border-default);
-            color: var(--color-text-primary);
-            border-radius: var(--radius-md);
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .edit-btn:hover,
-        .export-main-btn:hover {
-            background: var(--color-surface-hover);
-            border-color: var(--color-accent-primary);
-            color: var(--color-accent-primary);
-        }
-
-        /* Disabled Edit Button */
-        .edit-btn:disabled,
-        .edit-btn.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            pointer-events: none;
-            background: var(--color-bg-secondary);
-        }
+        /* .btn-icon styles moved to theme.css */
 
         .edit-actions {
             display: flex;
@@ -521,6 +491,8 @@
             min-width: 160px;
             z-index: 1000;
             padding: 4px;
+            top: calc(100% + 8px);
+            right: 0;
         }
 
         .export-dropdown-menu.show {
@@ -643,27 +615,27 @@
                 <!-- Edit Buttons -->
                 {% if not file.get('preview_mode') %}
                 {% if file.filename.endswith('.docx') %}
-                <button class="edit-btn disabled" disabled title="Editing Word documents is not supported in-browser">
-                    <i class="bi bi-pencil-square"></i> Edit
+                <button class="btn-icon disabled" disabled title="Editing Word documents is not supported in-browser">
+                    <i class="fas fa-pen-to-square"></i>
                 </button>
                 {% else %}
-                <button class="edit-btn" onclick="toggleEditMode()">
-                    <i class="bi bi-pencil-square"></i> Edit
+                <button class="btn-icon" onclick="toggleEditMode()" title="Edit Document">
+                    <i class="fas fa-pen-to-square"></i>
                 </button>
                 {% endif %}
                 {% endif %}
 
                 <!-- Export -->
                 <div class="export-dropdown">
-                    <button class="export-main-btn" onclick="toggleExportMenu()">
-                        <i class="bi bi-download"></i> Export
+                    <button class="btn-icon" id="exportBtn" onclick="toggleExportMenu()" title="Export Options">
+                        <i class="fas fa-download"></i>
                     </button>
                     <div class="export-dropdown-menu" id="exportMenu">
                         <div class="export-dropdown-item pdf" onclick="exportToPDF()">
-                            <i class="bi bi-file-pdf"></i> PDF
+                            <i class="fas fa-file-pdf"></i> PDF
                         </div>
                         <div class="export-dropdown-item word" onclick="exportToWord()">
-                            <i class="bi bi-file-word"></i> Word
+                            <i class="fas fa-file-word"></i> Word
                         </div>
                     </div>
                 </div>
@@ -820,7 +792,7 @@
                 controls.className = 'edit-actions';
                 controls.innerHTML = `
                     <button class="btn-save" onclick="saveDocument()">
-                        <i class="bi bi-save"></i> Save Changes
+                        <i class="fas fa-save"></i> Save Changes
                     </button>
                     <button class="btn-cancel" onclick="cancelEdit()">
                         Cancel
@@ -895,7 +867,7 @@
 
             const saveBtn = document.querySelector('.btn-save');
             const origText = saveBtn.innerHTML;
-            saveBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
             saveBtn.disabled = true;
 
             fetch('/api/save-document', {
@@ -942,9 +914,9 @@
         }
 
         function performExport(endpoint, ext) {
-            const btn = document.querySelector('.export-main-btn');
+            const btn = document.getElementById('exportBtn');
             const orig = btn.innerHTML;
-            btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
             const html = document.documentElement.outerHTML;
 
