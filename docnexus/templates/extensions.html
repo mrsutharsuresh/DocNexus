@@ -37,7 +37,7 @@
             <!-- Global "Extensions" Search (Moved from body) -->
             <div class="search-bar" style="width: 280px;">
                 <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search extensions...">
+                <input type="text" id="extensionSearch" placeholder="Search extensions...">
             </div>
 
             <!-- Refresh Button -->
@@ -85,6 +85,27 @@
         let allPlugins = []; // Store fetched plugins
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Search Logic
+            const searchInput = document.getElementById('extensionSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    const filtered = allPlugins.filter(p =>
+                        p.name.toLowerCase().includes(term) ||
+                        p.desc.toLowerCase().includes(term)
+                    );
+                    renderPlugins(filtered);
+
+                    // Reset filters UI if searching
+                    if (term.length > 0) {
+                        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    } else {
+                        // Default to 'All' if cleared
+                        document.querySelector('.filter-btn').classList.add('active');
+                    }
+                });
+            }
+
             // Simulate slight network delay for effect
             // Ensure theme manager init is called if not handled by script below (it is)
             setTimeout(fetchRegistry, 600);

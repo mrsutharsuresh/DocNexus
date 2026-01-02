@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - **Plugin System Infrastructure**: Added "Extensions" marketplace UI in Settings.
-- **Extensions UI**: Functional filter buttons (Featured, Export Tools, Themes, etc.) with client-side category filtering.
+- **Extensions UI**: Functional filter buttons (Featured, Export Tools, Themes, etc.) and real-time search filtering.
 - **UI Consistency**: Standardized the Settings icon across the entire application to use the premium circular design.
 - **Theme Consistency**: Unified header and brand styling across Main and Extensions pages. Fixed Theme Toggle on Extensions page.
 - **Dependency**: Bundled `python-pptx` library for future PowerPoint support.
