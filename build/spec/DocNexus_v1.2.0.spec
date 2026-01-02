@@ -5,7 +5,7 @@ a = Analysis(
     ['D:\\Code\\DocNexusCorp\\DocNexus\\docnexus\\app.py'],
     pathex=['D:\\Code\\DocNexusCorp\\DocNexus'],
     binaries=[],
-    datas=[('D:\\Code\\DocNexusCorp\\DocNexus\\docnexus\\templates', 'docnexus\\templates'), ('D:\\Code\\DocNexusCorp\\DocNexus\\docnexus\\static', 'docnexus\\static'), ('D:\\Code\\DocNexusCorp\\DocNexus\\docnexus\\plugins_dev', 'docnexus\\plugins_dev')],
+    datas=[('D:\\Code\\DocNexusCorp\\DocNexus\\docnexus\\templates', 'docnexus/templates'), ('D:\\Code\\DocNexusCorp\\DocNexus\\docnexus\\static', 'docnexus/static')],
     hiddenimports=['docnexus.features', 'docnexus.features.smart_convert', 'engineio.async_drivers.threading', 'pymdownx', 'pymdownx.betterem', 'pymdownx.superfences', 'pymdownx.tabbed', 'pymdownx.details', 'pymdownx.magiclink', 'pymdownx.tasklist', 'pymdownx.arithmatex', 'pymdownx.highlight', 'pymdownx.inlinehilite', 'pymdownx.keys', 'pymdownx.smartsymbols', 'pymdownx.snippets', 'pymdownx.tilde', 'pymdownx.caret', 'pymdownx.mark', 'pymdownx.emoji', 'pymdownx.saneheaders'],
     hookspath=[],
     hooksconfig={},

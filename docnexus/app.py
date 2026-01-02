@@ -90,15 +90,23 @@ app.secret_key = os.urandom(24)  # For session management
 # 3. This allows the server to accept the HTTP request and check the actual data size intelligently
 
 # Configuration
-# Get the project root directory (parent of doc_viewer)
-# Configuration
-# Get the project root directory (parent of doc_viewer)
+flask_kwargs = {'static_folder': 'static'}
+
+# Detect Environment
 if getattr(sys, 'frozen', False):
-    # Running as compiled executable
+    # Running as compiled executable (PyInstaller)
+    # sys._MEIPASS is the temp folder where PyInstaller extracts bundled files
+    BUNDLE_DIR = Path(sys._MEIPASS).resolve()
     PROJECT_ROOT = Path(sys.executable).parent
+    
+    # Bundle structure: sys._MEIPASS/docnexus/templates
+    flask_kwargs['template_folder'] = str(BUNDLE_DIR / 'docnexus' / 'templates')
+    flask_kwargs['static_folder'] = str(BUNDLE_DIR / 'docnexus' / 'static')
 else:
     # Running from source
-    PROJECT_ROOT = Path(__file__).parent.parent
+    PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+app = Flask(__name__, **flask_kwargs)
 
 # Logging Configuration
 LOG_DIR = PROJECT_ROOT / 'logs'

@@ -142,9 +142,29 @@ def build():
         # To be robust, let's allow PyInstaller to just find it via sys.path (cmd includes PROJECT_ROOT)
     
     # Entry Point
+    # cmd.extend(["--runtime-hook", str(BUILD_DIR / 'rthook_flask.py')])
     cmd.append(str(PROJECT_ROOT / "docnexus" / "app.py"))
     
     run(cmd)
+    
+    # Copy Examples Folder for Distribution
+    examples_src = PROJECT_ROOT / "examples"
+    examples_dst = OUTPUT_DIR / "examples"
+    if examples_src.exists():
+        log(f"Copying examples to dist: {examples_dst}", Colors.OKGREEN)
+        if examples_dst.exists():
+            shutil.rmtree(examples_dst)
+        shutil.copytree(examples_src, examples_dst)
+
+    # Copy Docs Folder for Distribution
+    docs_src = PROJECT_ROOT / "docs"
+    docs_dst = OUTPUT_DIR / "docs"
+    if docs_src.exists():
+        log(f"Copying docs to dist: {docs_dst}", Colors.OKGREEN)
+        if docs_dst.exists():
+            shutil.rmtree(docs_dst)
+        shutil.copytree(docs_src, docs_dst)
+        
     log(f"Build Complete: {OUTPUT_DIR / app_name}", Colors.OKGREEN)
 
 def release():

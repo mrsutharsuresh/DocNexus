@@ -13,6 +13,11 @@ All notable changes to this project will be documented in this file.
 - **Build System**: Added `make freeze` command to lock dependencies.
 - **Dependency**: Bundled `python-pptx`, `pymdown-extensions`, `Pygments` (highlighting), `htmldocx` (Word export), and `mammoth` (Word import) to prevent runtime issues.
 
+### Fixed
+- **Runtime Stability**: Fixed `TemplateNotFound` crash in standalone executable by correcting Flask path resolution for frozen environments.
+- **Distribution**: Fixed missing `examples` and `docs` folders in the built executable.
+- **Build System**: Removed interactive prompts from build script for cleaner automation.
+
 
 
 ## [v1.1.4] - 2026-01-02
