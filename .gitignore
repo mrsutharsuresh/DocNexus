@@ -40,3 +40,4 @@ logs/
 instance/
 config.json
 backup/
+*.bak
