@@ -658,7 +658,9 @@
                     <div>
                         <h1 class="document-title">{{ file.name }}</h1>
                         <div class="document-path">
-                            <i class="bi bi-folder"></i> {{ file.filename }}
+                            <i class="fas fa-file-alt"></i> {{ file.filename }} &nbsp;|&nbsp;
+                            <i class="fas fa-hdd"></i> {{ file.size }} &nbsp;|&nbsp;
+                            <i class="fas fa-clock"></i> {{ file.modified }}
                         </div>
                     </div>
                 </div>

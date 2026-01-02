@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - **Top Button Revamp**: Transformed "Go to Top" button into a cleaner, circular glassmorphic FAB (42x42px) with FontAwesome arrow icon.
 - **Edit Logic**: Improved UX by allowing the "Edit" button to toggle/cancel the editor if clicked while the editor is already open.
 - **Icon Standardization**: Migrated remaining view-page icons to FontAwesome (`fas`) to ensuring uniform style and weight across the application.
+- **Header Metadata**: Enhanced document header to display file size and last modification date alongside the filename.
 
 
 ### Fixed
