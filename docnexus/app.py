@@ -220,49 +220,14 @@ FEATURES.register(Feature("SMART_TABLES", smart.convert_ascii_tables_to_markdown
 FEATURES.register(Feature("SMART_SIP", smart.convert_sip_signaling_to_mermaid, FeatureState.EXPERIMENTAL))
 FEATURES.register(Feature("SMART_TOPOLOGY", smart.convert_topology_to_mermaid, FeatureState.EXPERIMENTAL))
 
-# Plugin System Loading
-def load_plugins():
-    """Load plugins from plugins_dev or frozen location."""
-    plugin_path = None
-    
-    if getattr(sys, 'frozen', False):
-        # In frozen app, plugins are in internal _MEI.../docnexus/plugins
-        # or similar structure depending on build. 
-        # Check standard location first
-        pass 
-    else:
-        # Dev mode
-        possible_path = PROJECT_ROOT / 'docnexus' / 'plugins_dev'
-        if possible_path.exists():
-            plugin_path = possible_path
+# Connect FeatureManager to Registry (Facade Pattern)
+# This allows FeatureManager to pull "Algorithm" features from plugins
+FEATURES._registry = PluginRegistry()
+# Force debug print to console
+print(f"DEBUG_STARTUP: Plugins in Registry: {FEATURES._registry.get_all_plugins()}")
+FEATURES.refresh()
+print(f"DEBUG_STARTUP: Features in Manager: {[f.name for f in FEATURES._features]}")
 
-    if plugin_path and plugin_path.exists():
-        logger.info(f"Scanning for plugins in {plugin_path}")
-        sys.path.append(str(plugin_path.parent)) # Add docnexus parent to path if needed, or rely on existing path
-        
-        # We need to import dynamically. 
-        # Structure: docnexus/plugins_dev/<plugin_name>/plugin.py
-        for item in plugin_path.iterdir():
-            if item.is_dir() and (item / 'plugin.py').exists():
-                try:
-                    import importlib.util
-                    spec = importlib.util.spec_from_file_location(
-                        f"docnexus.plugins_dev.{item.name}", 
-                        item / 'plugin.py'
-                    )
-                    if spec and spec.loader:
-                        module = importlib.util.module_from_spec(spec)
-                        sys.modules[f"docnexus.plugins_dev.{item.name}"] = module
-                        spec.loader.exec_module(module)
-                        
-                        if hasattr(module, 'register'):
-                            module.register(FEATURES)
-                            logger.info(f"Loaded plugin: {item.name}")
-                except Exception as e:
-                    logger.error(f"Failed to load plugin {item.name}: {e}")
-
-# Load plugins
-load_plugins()
 
 # Context Processor for Debugging (moved here after all config is loaded)
 @app.context_processor

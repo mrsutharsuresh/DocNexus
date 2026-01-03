@@ -65,14 +65,44 @@ Plugins can inject content into predefined areas (Slots) of the UI.
         *   `CONTENT_START`: Top of the document content area.
         *   `CONTENT_END`: Bottom of the document content area.
 
+### 5. Feature Framework (Registry Facade)
+
+Refactored in v1.2.3, the `FeatureManager` acts as a facade, pulling capabilities ("Features") from registered plugins.
+
+#### Feature Types
+*   **ALGORITHM**: Text transformation logic (e.g., standardizing headers, converting tables, generating TOCs). Chained together in a `Pipeline`.
+*   **UI_EXTENSION**: Legacy/Misc UI logic.
+*   **EXPORT_HANDLER**: Custom export logic (e.g., PDF, DOCX).
+
+#### Pipeline Backbone
+The `Pipeline` class represents a sequence of `ALGORITHM` features.
+1.  **Construction**: `FeatureManager.build_pipeline(enable_experimental)`
+2.  **Execution**: `pipeline.run(markdown_content)`
+3.  **Lego Blocks**: Plugins can provide their own "blocks" (Algorithms) which are automatically inserted into the pipeline.
+
+#### Declaring Features
+Plugins override `get_features()` to expose their capabilities:
+
+```python
+def get_features(self) -> List[Any]:
+    return [
+        Feature("MY_ALGORITHM", self.my_handler, FeatureState.STANDARD, FeatureType.ALGORITHM)
+    ]
+```
+
 ## Usage
 
 ### Registration
-Plugins are registered via `PluginRegistry().register(instance)`. This is typically done by the plugin loader or manual registration in `app.py`.
+Plugins are registered via `PluginRegistry().register(instance)`. This is typically done by the plugin loader (`loader.py`).
 
 ### Initialization
-The application calls `load_plugins()` followed by `PluginRegistry().initialize_all()` during startup.
+1.  **Loader**: `loader.py` scans appropriate directories (including `sys._MEIPASS` when frozen).
+2.  **Registration**: Plugins register themselves.
+3.  **App Startup**: `app.py` calls `PluginRegistry().initialize_all()`.
+4.  **Feature Refresh**: `app.py` calls `FEATURES.refresh()` to pull features from initialized plugins into the `FeatureManager`.
 
-## Future Roadmap
-
-*   **v1.2.3**: UI Slot Integration (React Mount Points).
+## Directory Structure
+*   `docnexus/core/plugin_interface.py`: The Contract (ABC).
+*   `docnexus/core/registry.py`: The State (Singleton PluginRegistry).
+*   `docnexus/core/loader.py`: The Discovery (File Scanner).
+*   `docnexus/features/registry.py`: The Facade (FeatureManager & Pipeline).

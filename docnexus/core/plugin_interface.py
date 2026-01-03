@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 class PluginInterface(ABC):
     """
@@ -29,3 +29,10 @@ class PluginInterface(ABC):
         Cleanup resources before shutdown.
         """
         pass
+
+    def get_features(self) -> List[Any]:
+        """
+        Return a list of Features or Algorithms provided by this plugin.
+        Default implementation returns empty list.
+        """
+        return []

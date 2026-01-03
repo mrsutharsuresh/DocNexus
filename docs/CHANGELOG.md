@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.2.3] - 2026-01-04
+
+### Refactored
+- **Feature Framework**: Introduced "Registry Facade" and "Feature Types". `FeatureManager` now aggregates features dynamically from loaded plugins via `get_features()`.
+- **Pipeline Backbone**: Implemented `Pipeline` class to construct and execute sequences of `ALGORITHM` features.
+- **Plugin Loader**: Updated `loader.py` to support `sys._MEIPASS`, enabling plugins bundled with PyInstaller to be correctly discovered at runtime.
+
+### Added
+- **Plugin Interface**: Added `get_features() -> List[Any]` to `PluginInterface` to support algorithm exposure.
+
+### Fixed
+- **App Initialization**: Resolved critical startup order issues in `app.py` to ensure plugins are loaded before feature manager refresh.
+
 ## [v1.2.2] - 2026-01-03
 
 ### Added
