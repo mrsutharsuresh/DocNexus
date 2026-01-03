@@ -462,6 +462,11 @@
     </header>
 
     <main>
+        <!-- Slot: MAIN_TOP -->
+        {% for slot_html in get_slots('MAIN_TOP') %}
+        {{ slot_html|safe }}
+        {% endfor %}
+
         <div class="section-header">
             <h2><i class="fas fa-folder-open"></i> Documents</h2>
         </div>
@@ -548,6 +553,11 @@
         </div>
         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
             <span>DocNexus &copy; 2026</span>
+
+            <!-- Slot: FOOTER_RIGHT -->
+            {% for slot_html in get_slots('FOOTER_RIGHT') %}
+            {{ slot_html|safe }}
+            {% endfor %}
         </div>
     </footer>
 

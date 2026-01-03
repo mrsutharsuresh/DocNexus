@@ -54,7 +54,16 @@ Plugins can inject content into predefined areas (Slots) of the UI.
 *   **Mechanism**: `registry.register_slot(slot_name, html_content)`
 *   **Rendering**: Flask templates iterate over `get_slots(slot_name)` and render the HTML safely.
 *   **Available Slots**:
-    *   `HEADER_RIGHT`: Icons/Buttons in the top navigation bar.
+    *   **Shared**:
+        *   `HEADER_RIGHT`: Icons/Buttons in the top navigation bar.
+    *   **Index Page (`index.html`)**:
+        *   `MAIN_TOP`: Just below header, above content grid.
+        *   `FOOTER_RIGHT`: Bottom right corner.
+    *   **View Page (`view.html`)**:
+        *   `EXPORT_MENU`: Inside the "Export" dropdown.
+        *   `SIDEBAR_BOTTOM`: Bottom of the right-side TOC sidebar.
+        *   `CONTENT_START`: Top of the document content area.
+        *   `CONTENT_END`: Bottom of the document content area.
 
 ## Usage
 

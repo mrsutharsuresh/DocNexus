@@ -705,11 +705,20 @@
                         <div class="export-dropdown-item word" onclick="exportToWord()">
                             <i class="fas fa-file-word"></i> Word
                         </div>
+                        <!-- Slot: EXPORT_MENU -->
+                        {% for slot_html in get_slots('EXPORT_MENU') %}
+                        {{ slot_html|safe }}
+                        {% endfor %}
                     </div>
                 </div>
 
                 <!-- Settings (Shared) -->
                 {% include 'components/settings_menu.html' %}
+
+                <!-- Slot: HEADER_RIGHT -->
+                {% for slot_html in get_slots('HEADER_RIGHT') %}
+                {{ slot_html|safe }}
+                {% endfor %}
             </div>
         </div>
     </nav>
@@ -718,6 +727,11 @@
     <div class="main-container">
         <main class="content-area">
             <div id="documentContent">
+                <!-- Slot: CONTENT_START -->
+                {% for slot_html in get_slots('CONTENT_START') %}
+                {{ slot_html|safe }}
+                {% endfor %}
+
                 <div class="document-header">
                     <div>
                         <h1 class="document-title">{{ file.name }}</h1>
@@ -743,6 +757,11 @@
                 <div class="markdown-content">
                     {{ file.content | safe }}
                 </div>
+
+                <!-- Slot: CONTENT_END -->
+                {% for slot_html in get_slots('CONTENT_END') %}
+                {{ slot_html|safe }}
+                {% endfor %}
             </div>
 
             <!-- Editor Section (Initially Hidden) -->
@@ -755,6 +774,13 @@
         <aside class="toc-sidebar">
             <div class="toc-title">On this page</div>
             <nav id="tocNav" class="toc-nav"></nav>
+
+            <!-- Slot: SIDEBAR_BOTTOM -->
+            <div style="margin-top: 2rem;">
+                {% for slot_html in get_slots('SIDEBAR_BOTTOM') %}
+                {{ slot_html|safe }}
+                {% endfor %}
+            </div>
         </aside>
     </div>
 
