@@ -5,6 +5,8 @@ DocNexus uses a **cross-platform build system** centered around Python. This ens
 > **Architecture**: All logic resides in `scripts/build.py`. 
 > *   **Windows**: The `make.ps1` script wraps this Python logic.
 > *   **Linux/Mac**: The `Makefile` wraps this Python logic.
+>
+> **Single Source of Truth**: The version is defined in `docnexus/version_info.py` and propagated to the build system and application automatically.
 
 ---
 

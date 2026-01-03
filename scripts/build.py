@@ -119,7 +119,7 @@ def build():
     """Build the standalone executable."""
     # Get Version (duplicate logic, but needed for name)
     try:
-        init_file = PROJECT_ROOT / "docnexus" / "__init__.py"
+        init_file = PROJECT_ROOT / "docnexus" / "version_info.py"
         with open(init_file) as f:
             for line in f:
                 if "__version__" in line:
@@ -151,6 +151,7 @@ def build():
 
     # Hidden Imports
     hidden_imports = [
+        "docnexus.version_info",
         "docnexus.features", "docnexus.features.smart_convert",
         "engineio.async_drivers.threading",
         "pymdownx", "pymdownx.betterem", "pymdownx.superfences",

@@ -8,6 +8,7 @@ This document describes the standard Python project structure for DocNexus.
 DocNexus/
 ├── docnexus/                 # Main application package
 │   ├── __init__.py            # Package initialization & version
+│   ├── version_info.py        # Single Source of Truth for Version
 │   ├── app.py                 # Flask application setup
 │   ├── cli.py                 # Command-line interface
 │   ├── core/                  # Core functionality
@@ -17,6 +18,7 @@ DocNexus/
 │   │   ├── standard.py        # Standard features (TOC, etc.)
 │   │   └── smart_convert.py  # Experimental features
 │   └── templates/             # HTML templates
+│       ├── components/        # Reusable UI components (header_brand, settings)
 │       ├── index.html         # File browser
 │       ├── view.html          # Document viewer
 │       └── docs.html          # Documentation viewer

@@ -21,6 +21,7 @@ Complete documentation for DocPresent v1.0.0 - Professional Markdown Documentati
 
 - **[Build Guide](BUILD.md)** - Building executables and packages
 - **[Open Source Standards](OPEN_SOURCE_STANDARDS.md)** - Standards compliance details
+- **[Architecture & Logic](DOCNEXUS_ARCHITECTURE.md)** - Logic flows and versioning
 - **[Structure Guide](STRUCTURE.md)** - Project organization
 - **[Documentation Index](DOCUMENTATION_INDEX.md)** - Complete navigation
 
@@ -47,6 +48,6 @@ Complete documentation for DocPresent v1.0.0 - Professional Markdown Documentati
 
 ---
 
-**Version**: 1.0.0  
+**Version**: 1.2.0  
 **License**: Cisco Internal Use Only  
-**Contact**: Suresh Kumar (sureshk6@cisco.com)
+**Contact**: Suresh Kumar (sureshk6@cisco.com) © 2026

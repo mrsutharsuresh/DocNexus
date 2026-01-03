@@ -22,7 +22,11 @@ All notable changes to this project will be documented in this file.
 - **UI**: Fixed visibility issue for "Save Changes" button in Workspace Settings (Light Mode).
 - **UI**: Fixed text cursor appearing on static elements (enabled native-app feel).
 - **UI**: Standardized version badge style on Documentation page.
-- **core**: Fixed version fallback logic to correctly display v1.2.0 in compiled builds.
+- **UI**: Added consistent DocNexus branding (Logo + Name + Version) to Documentation and Viewer pages headers.
+- **core**: Refactored branding logic into shared component (`components/header_brand.html`) and enabled global version context.
+- **core**: Established Single Source of Truth for versioning (`docnexus/version_info.py`) and robustified build config.
+- **core**: Fixed version fallback logic and added startup logging for better troubleshooting.
+- **docs**: Major overhaul of project documentation (`README`, `STRUCTURE`, `BUILD`) and added `DOCNEXUS_ARCHITECTURE.md`.
 
 
 

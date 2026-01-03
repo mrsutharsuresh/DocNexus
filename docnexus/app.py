@@ -73,17 +73,45 @@ except Exception:
     from docnexus.features import smart_convert as smart
     from docnexus.features.standard import normalize_headings, sanitize_attr_tokens, build_toc, annotate_blocks
 
+import os
+
+# Debug Logging
 try:
-    from . import __version__
-    VERSION = __version__
-except ImportError:
-    # Fallback if running directly
-    VERSION = '1.2.0'
+    debug_path = os.path.join(os.path.expanduser('~'), 'docnexus_debug.txt')
+    with open(debug_path, 'w') as f:
+        f.write("Starting DocNexus...\n")
+        try:
+            from docnexus.version_info import __version__ as VERSION
+            f.write(f"Success loading version_info: {VERSION}\n")
+        except ImportError as e:
+            VERSION = '0.0.0-fallback'
+            f.write(f"ImportError loading version_info: {e}\n")
+        except Exception as e:
+            VERSION = '0.0.0-error'
+            f.write(f"Unknown error loading version_info: {e}\n")
+except Exception:
+    # If we can't write log, just try to load
+    try:
+        from docnexus.version_info import __version__ as VERSION
+    except:
+        VERSION = '0.0.0-panic'
 
 app = Flask(__name__, static_folder='static')
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.secret_key = os.urandom(24)  # For session management
+
+# Global Template Context
+@app.context_processor
+def inject_global_context():
+    # Final safety net
+    v = VERSION
+    if not v:
+        v = '1.2.0-error'
+    return {
+        'version': v
+    }
+
 # Note: We do NOT set MAX_CONTENT_LENGTH here because:
 # 1. Form-encoded data can be 2-3x larger than actual file content
 # 2. We validate actual file/content size at the application level instead
