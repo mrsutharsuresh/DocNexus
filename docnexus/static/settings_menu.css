@@ -36,30 +36,11 @@
 }
 
 /* Button Styling matching index.html */
+/* Button Styling matching index.html */
+/* We rely on .btn-icon from theme.css for standard styling */
 .settings-trigger {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.05);
-    /* Fixed glass effect always */
-    border: 1px solid var(--settings-border);
-    color: var(--settings-text);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    /* Only keep layout-specific overrides if strictly necessary - currently none needed */
     cursor: pointer;
-    transition: all 0.2s ease;
-    text-decoration: none;
-    padding: 0;
-    outline: none;
-    user-select: none;
-}
-
-.settings-trigger:hover {
-    background: var(--settings-hover);
-    border-color: var(--settings-accent);
-    color: var(--settings-accent);
-    transform: translateY(-1px);
 }
 
 .settings-menu {
