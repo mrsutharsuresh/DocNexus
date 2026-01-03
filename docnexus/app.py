@@ -71,7 +71,11 @@ except Exception:
     from docnexus.core.renderer import render_baseline, run_pipeline
     from docnexus.features.registry import FeatureManager, Feature, FeatureState
     from docnexus.features import smart_convert as smart
+    from docnexus.features import smart_convert as smart
     from docnexus.features.standard import normalize_headings, sanitize_attr_tokens, build_toc, annotate_blocks
+
+from docnexus.core.loader import load_plugins
+from docnexus.core.registry import PluginRegistry
 
 import os
 
@@ -134,7 +138,16 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger('docnexus')
+logger = logging.getLogger('docnexus')
 logger.info(f"Application starting - Version {VERSION}")
+
+# Initialize Plugins
+try:
+    logger.info("Initializing Plugin System...")
+    load_plugins()
+    PluginRegistry().initialize_all()
+except Exception as e:
+    logger.error(f"Plugin system initialization failed: {e}", exc_info=True)
 
 # Workspace Configuration
 CONFIG_FILE = PROJECT_ROOT / 'config.json'
