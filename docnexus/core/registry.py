@@ -11,12 +11,31 @@ class PluginRegistry:
     """
     _instance = None
     _plugins: Dict[str, PluginInterface] = {}
+    _custom_slots: Dict[str, List[str]] = {}
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(PluginRegistry, cls).__new__(cls)
             cls._instance._plugins = {}
+            cls._instance._custom_slots = {}
         return cls._instance
+
+    def register_slot(self, slot_name: str, content: str) -> None:
+        """
+        Register content for a specific UI slot.
+        Appends the content to the list for that slot.
+        """
+        if slot_name not in self._custom_slots:
+            self._custom_slots[slot_name] = []
+        self._custom_slots[slot_name].append(content)
+        logger.debug(f"Registered content for slot: {slot_name}")
+
+    def get_slots(self, slot_name: str) -> List[str]:
+        """
+        Retrieve all content registered for a specific slot.
+        Returns a list of safe HTML strings.
+        """
+        return self._custom_slots.get(slot_name, [])
 
     def register(self, plugin: PluginInterface) -> None:
         """

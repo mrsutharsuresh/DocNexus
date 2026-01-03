@@ -93,7 +93,8 @@ app.secret_key = os.urandom(24)
 @app.context_processor
 def inject_global_context():
     return {
-        'version': VERSION
+        'version': VERSION,
+        'get_slots': PluginRegistry().get_slots
     }
 
 @app.route('/api/version')

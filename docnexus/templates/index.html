@@ -453,6 +453,11 @@
 
             <!-- Settings Dropdown (Shared Component) -->
             {% include 'components/settings_menu.html' %}
+
+            <!-- Plugin Slots: HEADER_RIGHT -->
+            {% for slot_html in get_slots('HEADER_RIGHT') %}
+            {{ slot_html|safe }}
+            {% endfor %}
         </div>
     </header>
 

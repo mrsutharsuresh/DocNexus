@@ -37,15 +37,33 @@ The `PluginRegistry` is a **Singleton** that acts as the central hub.
 *   **Lifecycle Orchestration**: Responsible for calling `initialize()` and `shutdown()` on all plugins in the correct order.
 *   **API Access**: Provides methods like `get_plugin(name)` for inter-plugin communication.
 
+### 3. PluginLoader (`loader.py`)
+
+Introduced in v1.2.2, the loader handles the discovery of plugin modules from the filesystem.
+
+*   **Split-Environment Strategy**:
+    *   **Development**: Scans `docnexus/plugins_dev` (typically a junction to the source).
+    *   **Production**: Scans `plugins/` directory adjacent to the executable.
+*   **Dynamic Import**: Uses `importlib` to load `plugin.py` files found in these directories.
+*   **Auto-Registration**: Plugins are expected to register themselves upon import (e.g., `PluginRegistry().register(MyPlugin())`).
+
+### 4. UI Slots (`registry.register_slot`)
+
+Plugins can inject content into predefined areas (Slots) of the UI.
+
+*   **Mechanism**: `registry.register_slot(slot_name, html_content)`
+*   **Rendering**: Flask templates iterate over `get_slots(slot_name)` and render the HTML safely.
+*   **Available Slots**:
+    *   `HEADER_RIGHT`: Icons/Buttons in the top navigation bar.
+
 ## Usage
 
 ### Registration
-Plugins are registered via `PluginRegistry().register(instance)`. This is typically done by the plugin loader (coming in v1.2.2) or manual registration in `app.py`.
+Plugins are registered via `PluginRegistry().register(instance)`. This is typically done by the plugin loader or manual registration in `app.py`.
 
 ### Initialization
-The application calls `PluginRegistry().initialize_all()` during startup, which triggers the `initialize()` method of every registered plugin.
+The application calls `load_plugins()` followed by `PluginRegistry().initialize_all()` during startup.
 
 ## Future Roadmap
 
-*   **v1.2.2**: Dynamic Plugin Loader (scanning `plugins/` directory).
 *   **v1.2.3**: UI Slot Integration (React Mount Points).
