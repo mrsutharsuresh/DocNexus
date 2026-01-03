@@ -99,6 +99,13 @@ def setup():
     log("Installing dependencies...")
     run([str(PYTHON_EXEC), "-m", "pip", "install", "--upgrade", "pip", "wheel", "setuptools"])
     run([str(PYTHON_EXEC), "-m", "pip", "install", "-e", "."])
+    
+    # 2.5 Install explicit requirements (sync with pyproject.toml)
+    req_file = PROJECT_ROOT / "requirements.txt"
+    if req_file.exists():
+        log(f"Installing requirements from {req_file}...", Colors.OKBLUE)
+        run([str(PYTHON_EXEC), "-m", "pip", "install", "-r", str(req_file)])
+
     run([str(PYTHON_EXEC), "-m", "pip", "install", "pyinstaller"])
     
     log("Setup complete!", Colors.BOLD)
@@ -228,12 +235,44 @@ def launch():
     else:
         subprocess.call([str(latest_exe)])
 
+def verify():
+    """Verify environment health."""
+    log("Verifying environment...", Colors.OKCYAN)
+    
+    # Check Python
+    log(f"Python: {sys.version.split()[0]}", Colors.OKBLUE)
+    
+    # Check Venv
+    if VENV_DIR.exists():
+        log(f"Venv: Found at {VENV_DIR}", Colors.OKGREEN)
+    else:
+        log(f"Venv: NOT FOUND at {VENV_DIR}", Colors.FAIL)
+    
+    # Check Imports
+    required = ['flask', 'markdown', 'pdfkit', 'mammoth']
+    log("\nChecking libraries:", Colors.HEADER)
+    for lib in required:
+        try:
+            run([str(PYTHON_EXEC), "-c", f"import {lib}"], capture=True)
+            log(f"  [x] {lib}", Colors.OKGREEN)
+        except Exception:
+            log(f"  [ ] {lib} (MISSING)", Colors.FAIL)
+            
+    # Check Build Tools
+    log("\nChecking build tools:", Colors.HEADER)
+    if PYINSTALLER_EXEC.exists():
+        log(f"  [x] PyInstaller", Colors.OKGREEN)
+    else:
+        log(f"  [ ] PyInstaller (MISSING)", Colors.FAIL)
+        
+    log("\nVerification Complete.", Colors.BOLD)
+
 # --- Main CLI ---
 
 def main():
     global LOG_FILE_HANDLE
     parser = argparse.ArgumentParser(description="DocNexus Build System")
-    parser.add_argument("command", choices=["setup", "build", "clean", "run", "release", "launch"], help="Command to run")
+    parser.add_argument("command", choices=["setup", "build", "clean", "run", "release", "launch", "verify"], help="Command to run")
     parser.add_argument("--log", action="store_true", help="Enable logging to build/build.log")
     
     if len(sys.argv) < 2:
@@ -263,6 +302,8 @@ def main():
             release()
         elif args.command == "launch":
             launch()
+        elif args.command == "verify":
+            verify()
     finally:
         if LOG_FILE_HANDLE:
             LOG_FILE_HANDLE.close()

@@ -51,7 +51,11 @@ DocNexus doesn't just display text; it understands it.
 ## ⚡ Quick Start
 
 ### 1-Click Run (Windows)
-Double-click `start.bat` to launch the server instantly.
+Double-click `make.cmd` to setup/build/run without PowerShell policy issues.
+```cmd
+make run     # Run from source
+make verify  # Check environment (New!)
+```
 
 ### CLI Installation
 ```bash
