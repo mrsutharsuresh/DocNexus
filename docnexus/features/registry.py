@@ -14,11 +14,12 @@ class FeatureType(Enum):
     EXPORT_HANDLER = auto()
 
 class Feature:
-    def __init__(self, name: str, handler: Callable[[str], Any], state: FeatureState, feature_type: FeatureType = FeatureType.ALGORITHM):
+    def __init__(self, name: str, handler: Callable[[str], Any], state: FeatureState, feature_type: FeatureType = FeatureType.ALGORITHM, meta: Dict = None):
         self.name = name
         self.handler = handler
         self.state = state
         self.type = feature_type
+        self.meta = meta or {}
 
 class Pipeline:
     """
@@ -150,9 +151,15 @@ class FeatureManager:
             # Flexible type checking
             ft_type = str(feature.type) # e.g. "FeatureType.EXPORT_HANDLER"
             
-            if "EXPORT_HANDLER" in ft_type and feature.name == format_ext:
-                logger.info(f"FeatureManager: Found handler for {format_ext}")
-                return feature.handler
+            if "EXPORT_HANDLER" in ft_type:
+                # Check meta 'extension' tag first
+                if getattr(feature, 'meta', {}).get('extension') == format_ext:
+                    logger.info(f"FeatureManager: Found handler for {format_ext} (via meta)")
+                    return feature.handler
+                # Fallback to name match
+                if feature.name == format_ext or feature.name == f"{format_ext}_export":
+                    logger.info(f"FeatureManager: Found handler for {format_ext} (via name)")
+                    return feature.handler
         
         logger.warning(f"FeatureManager: No handler found for {format_ext}. Available: {[f.name for f in self._features]}")
         return None

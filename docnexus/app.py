@@ -124,9 +124,25 @@ def get_plugins():
                 # Try to read docstring from plugin.py? 
                 # Or just basic info for now.
                 # If 'word_export', name it nicely
+                # Check for installer capability
+                has_installer = (item / 'installer.py').exists()
+                
+                # Check installation status
+                is_installed = True # Default
+                if has_installer:
+                    # If it has an installer, check if "activated"
+                    # Convention: If bundled & installer, check for ENABLED marker
+                    if is_bundled:
+                        is_installed = (item / 'ENABLED').exists()
+                    else:
+                        is_installed = True # User plugins (in external dir) are typically installed by definition
+                
                 if plugin_id == 'word_export':
                     display_name = "Word Export Pro"
                     desc = "Exports documentation to Microsoft Word (.docx) with TOC and styles."
+                elif plugin_id == 'pdf_export':
+                    display_name = "PDF Export"
+                    desc = "Exports documentation to PDF using pure Python engine."
                 elif plugin_id == 'auth':
                      display_name = "Authentication"
                      desc = "User management and login system."
@@ -140,35 +156,131 @@ def get_plugins():
                     'author': 'DocNexus Core' if is_bundled else 'User',
                     'downloads': '-',
                     'category': 'tool',
-                    'tags': [category_label], # used for filtering in UI
-                    'desc': desc,
-                    'icon': 'fa-plug',
-                    'enabled': True, # Assume enabled if present for now
-                    'verified': is_bundled,
-                    'type': category_label # 'bundled' or 'installed'
+                    'tags': [category_label],
+                    'description': desc, # Use 'description' matching UI update
+                    'icon': 'fa-file-pdf' if 'pdf' in plugin_id else ('fa-file-word' if 'word' in plugin_id else 'fa-plug'),
+                    'installed': is_installed,
+                    'can_install': has_installer,
+                    'type': category_label 
                 })
                 
     return jsonify(plugins)
+
+@app.route('/api/plugins/install/<plugin_id>', methods=['POST'])
+def install_plugin(plugin_id):
+    """
+    Trigger the installer.py for a specific plugin.
+    """
+    from docnexus.core.loader import get_plugin_paths
+    
+    # helper to find plugin dir
+    target_path = None
+    paths = get_plugin_paths()
+    for base_path in paths:
+        if not base_path.exists(): continue
+        candidate = base_path / plugin_id
+        if candidate.exists() and candidate.is_dir():
+            target_path = candidate
+            break
+            
+    if not target_path:
+        return jsonify({'error': f'Plugin {plugin_id} not found'}), 404
+        
+    installer_path = target_path / 'installer.py'
+    if not installer_path.exists():
+        return jsonify({'error': 'Plugin does not have an installer'}), 400
+        
+    try:
+        # Load installer module dynamically
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(f"installer_{plugin_id}", str(installer_path))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        
+        # Check if install function exists
+        if hasattr(module, 'install'):
+            success, message = module.install()
+            if success:
+                # Reload registry to activate new features immediately
+                try:
+                    from docnexus.core.loader import load_single_plugin
+                    load_single_plugin(plugin_id, target_path / 'plugin.py')
+                    # Also refresh the global features list if necessary
+                    # For now, load_single_plugin registers it into FEATURES singleton
+                except Exception as load_err:
+                     print(f"Warning: Failed to hot-reload plugin: {load_err}")
+
+                return jsonify({'success': True, 'message': message})
+            else:
+                return jsonify({'error': message}), 500
+        else:
+            return jsonify({'error': 'Installer module missing install() function'}), 500
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/plugins/uninstall/<plugin_id>', methods=['POST'])
+def uninstall_plugin(plugin_id):
+    """
+    Uninstall/Disable a plugin by removing its ENABLED marker or running uninstall script.
+    """
+    from docnexus.core.loader import get_plugin_paths
+    
+    target_path = None
+    paths = get_plugin_paths()
+    for base_path in paths:
+        if not base_path.exists(): continue
+        candidate = base_path / plugin_id
+        if candidate.exists() and candidate.is_dir():
+            target_path = candidate
+            break
+            
+    if not target_path:
+        return jsonify({'error': f'Plugin {plugin_id} not found'}), 404
+        
+    # Check if uninstall script exists
+    installer_path = target_path / 'installer.py'
+    # Or just check for ENABLED file
+    enabled_file = target_path / 'ENABLED'
+    
+    if enabled_file.exists():
+        try:
+            os.remove(enabled_file)
+            # Todo: Ideally we should unload the plugin from memory, but Python makes unloading hard.
+            # For now, a restart might be required to fully disable, or we can remove from FEATURES.
+            # But the UI will correct itself on refresh.
+            return jsonify({'success': True, 'message': 'Plugin disabled successfully. Please restart application to fully unload features.'})
+        except Exception as e:
+            return jsonify({'error': f"Failed to disable plugin: {e}"}), 500
+            
+    return jsonify({'error': 'Plugin is not installed/enabled locally.'}), 400
 
 # Note: We do NOT set MAX_CONTENT_LENGTH here because:
 # 1. Form-encoded data can be 2-3x larger than actual file content
 # 2. We validate actual file/content size at the application level instead
 # 3. This allows the server to accept the HTTP request and check the actual data size intelligently
 
-# Logging Configuration
-LOG_DIR = PROJECT_ROOT / 'logs'
-LOG_DIR.mkdir(exist_ok=True)
-LOG_FILE = LOG_DIR / 'docnexus.log'
+import webbrowser
+import logging
+from threading import Timer
+from pathlib import Path
+from docnexus.core.logging_config import setup_logging
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        RotatingFileHandler(LOG_FILE, maxBytes=10*1024*1024, backupCount=7),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger('docnexus')
+# Initialize Logging (Standardized)
+# Initialize Logging (Standardized)
+DEBUG_MODE = os.environ.get('FLASK_ENV') == 'development'
+
+if getattr(sys, 'frozen', False):
+    # If frozen, use the directory of the executable for persistent logs
+    BASE_DIR = Path(sys.executable).parent
+else:
+    # If running from source, use the project root
+    BASE_DIR = Path(__file__).resolve().parent.parent
+
+LOG_DIR = BASE_DIR / 'logs'
+setup_logging(LOG_DIR, DEBUG_MODE)
+
+logger = logging.getLogger(__name__)
 logger.info(f"Application starting - Version {VERSION}")
 
 # Initialize Plugins

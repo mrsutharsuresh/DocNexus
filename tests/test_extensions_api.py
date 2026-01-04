@@ -2,8 +2,8 @@ import urllib.request
 import json
 import sys
 
-URL = "http://localhost:5000/api/plugins"
-VERSION_URL = "http://localhost:5000/api/version"
+URL = "http://localhost:8000/api/plugins"
+VERSION_URL = "http://localhost:8000/api/version"
 
 def test_api():
     print(f"Testing {URL}...")

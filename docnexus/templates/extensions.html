@@ -195,11 +195,20 @@
         }
 
         function renderActionButton(p) {
+            // Case 1: Not installed, but installable -> Green "Install" button
             if (p.can_install && !p.installed) {
                 return `<button class="btn-manage" style="background:#10b981; color:white; border:none;" onclick="installPlugin('${p.id}', this)">
                             <i class="fas fa-download"></i> Install
                         </button>`;
             }
+            // Case 2: Installed AND has uninstall capability -> Red/Outline "Uninstall" button (via toggle)
+            if (p.can_install && p.installed) {
+                return `<button class="btn-manage" style="border-color:#ef4444; color:#ef4444;" onclick="uninstallPlugin('${p.id}', this)">
+                            <i class="fas fa-trash"></i> Uninstall
+                        </button>`;
+            }
+
+            // Case 3: Core Bundled (installed, no can_install) -> Locked "Manage" button
             return `<button class="btn-manage" onclick="togglePlugin('${p.id}')">Manage</button>`;
         }
 
@@ -210,7 +219,7 @@
                 const res = await fetch(`/api/plugins/install/${id}`, { method: 'POST' });
                 const json = await res.json();
                 if (res.ok) {
-                    alert("Success: " + (json.details || "Enabled"));
+                    alert("Success: " + (json.message || "Enabled"));
                     window.location.reload();
                 } else {
                     alert("Error: " + json.error);
@@ -224,8 +233,33 @@
             }
         }
 
+        async function uninstallPlugin(id, btn) {
+            if (!confirm("Are you sure you want to disable this plugin?")) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            try {
+                const res = await fetch(`/api/plugins/uninstall/${id}`, { method: 'POST' });
+                const json = await res.json();
+                if (res.ok) {
+                    alert("Plugin disabled.");
+                    window.location.reload();
+                } else {
+                    alert("Error: " + json.error);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-trash"></i> Uninstall';
+                }
+            } catch (e) {
+                alert("Error: " + e);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-trash"></i> Uninstall';
+            }
+        }
+
         function togglePlugin(id) {
-            alert('Install logic for ' + id + ' coming in next phase!');
+            const plugin = allPlugins.find(p => p.id === id);
+            // This is mostly for 'word_export' or other core plugins
+            alert('This is a core bundled plugin. It is always active and cannot be uninstalled.');
         }
     </script>
     <script src="{{ url_for('static', filename='theme.js') }}"></script>

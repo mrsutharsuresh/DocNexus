@@ -19,9 +19,9 @@ def install():
              import xhtml2pdf
              print("Dependency check: xhtml2pdf is available.")
         except ImportError:
-             return "Warning: xhtml2pdf library missing from environment!"
+             return False, "Warning: xhtml2pdf library missing from environment!"
         
-        return "PDF Plugin Enabled Successfully."
+        return True, "PDF Plugin Enabled Successfully."
         
     except Exception as e:
         raise RuntimeError(f"Activation failed: {e}")

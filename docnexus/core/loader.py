@@ -43,9 +43,13 @@ def get_plugin_paths() -> List[Path]:
         
     # 2. Check for Bundled Plugins (PyInstaller _MEIPASS)
     if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-        bundled_plugins = Path(sys._MEIPASS) / "docnexus" / DEV_PLUGIN_DIR_NAME
-        if bundled_plugins.exists() and bundled_plugins.is_dir():
-            paths.append(bundled_plugins)
+        bundled_dev = Path(sys._MEIPASS) / "docnexus" / DEV_PLUGIN_DIR_NAME
+        if bundled_dev.exists() and bundled_dev.is_dir():
+            paths.append(bundled_dev)
+        
+        bundled_prod = Path(sys._MEIPASS) / "docnexus" / PROD_PLUGIN_DIR_NAME
+        if bundled_prod.exists() and bundled_prod.is_dir():
+            paths.append(bundled_prod)
 
     # 3. Check for Dev Plugins folder (Source mode)
     # Note: In source, 'docnexus' is usually a subdir of CWD

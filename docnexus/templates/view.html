@@ -699,11 +699,11 @@
                         <i class="fas fa-download"></i>
                     </button>
                     <div class="export-dropdown-menu" id="exportMenu">
-                        <div class="export-dropdown-item pdf" onclick="exportToPDF()">
-                            <i class="fas fa-file-pdf"></i> PDF
-                        </div>
                         <div class="export-dropdown-item word" onclick="exportToWord()">
                             <i class="fas fa-file-word"></i> Word
+                        </div>
+                        <div class="export-dropdown-item pdf" onclick="exportToPDF()">
+                            <i class="fas fa-file-pdf"></i> PDF
                         </div>
                         <!-- Slot: EXPORT_MENU -->
                         {% for slot_html in get_slots('EXPORT_MENU') %}

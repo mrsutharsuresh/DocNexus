@@ -4,6 +4,7 @@ from pathlib import Path
 
 PLUGIN_DIR = Path(__file__).parent
 ENABLED_FILE = PLUGIN_DIR / "ENABLED"
+DEPENDENCIES = ["xhtml2pdf"]
 
 def export_pdf(content_html, output_path, meta):
     """

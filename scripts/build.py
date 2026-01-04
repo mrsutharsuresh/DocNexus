@@ -179,6 +179,7 @@ def build():
         "--icon", str(PROJECT_ROOT / "docnexus" / "static" / "logo.ico"),
         "--add-data", f"{PROJECT_ROOT / 'docnexus' / 'templates'}{os.pathsep}docnexus/templates",
         "--add-data", f"{PROJECT_ROOT / 'docnexus' / 'static'}{os.pathsep}docnexus/static",
+        "--add-data", f"{PROJECT_ROOT / 'docnexus' / 'plugins'}{os.pathsep}docnexus/plugins",
     ]
 
     # Hidden Imports
@@ -191,7 +192,8 @@ def build():
         "pymdownx.tasklist", "pymdownx.arithmatex", "pymdownx.highlight",
         "pymdownx.inlinehilite", "pymdownx.keys", "pymdownx.smartsymbols",
         "pymdownx.snippets", "pymdownx.tilde", "pymdownx.caret",
-        "pymdownx.mark", "pymdownx.emoji", "pymdownx.saneheaders"
+        "pymdownx.mark", "pymdownx.emoji", "pymdownx.saneheaders",
+        "xhtml2pdf", "reportlab", "html5lib"
     ]
     for imp in hidden_imports:
         cmd.extend(["--hidden-import", imp])
