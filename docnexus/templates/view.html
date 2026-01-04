@@ -1025,7 +1025,11 @@
             })
                 .then(r => {
                     if (r.ok) return r.blob();
-                    return r.json().then(data => { throw new Error(data.message || data.error || 'Export failed') });
+                    return r.json().then(data => {
+                        const err = new Error(data.message || data.error || 'Export failed');
+                        err.code = data.code; // Attach error code from backend
+                        throw err;
+                    });
                 })
                 .then(blob => {
                     const url = window.URL.createObjectURL(blob);
@@ -1036,7 +1040,15 @@
                     btn.innerHTML = orig;
                 })
                 .catch(e => {
-                    alert('Export Error: ' + e.message);
+                    console.error(e);
+                    if (e.code === 'MISSING_PLUGIN' || e.message.includes('not installed')) {
+                        // User-friendly prompt for missing plugin
+                        if (confirm(`The ${ext.toUpperCase()} export feature requires a plugin. Would you like to install it from the Extensions Marketplace?`)) {
+                            window.location.href = '/extensions';
+                        }
+                    } else {
+                        alert('Export Error: ' + e.message);
+                    }
                     btn.innerHTML = orig;
                 });
         }

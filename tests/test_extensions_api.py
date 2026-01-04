@@ -2,8 +2,8 @@ import urllib.request
 import json
 import sys
 
-URL = "http://localhost:8000/api/plugins"
-VERSION_URL = "http://localhost:8000/api/version"
+URL = "http://localhost:5000/api/plugins"
+VERSION_URL = "http://localhost:5000/api/version"
 
 def test_api():
     print(f"Testing {URL}...")
@@ -34,7 +34,8 @@ def test_api():
                 print("SUCCESS: pdf_export found.")
             else:
                  print("FAILURE: pdf_export NOT found.")
-            else:
+            
+            if not found_word_export:
                 print("FAILURE: word_export not found or not bundled.")
                 sys.exit(1)
 
