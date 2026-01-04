@@ -139,6 +139,23 @@ def kill_existing_process(app_name):
     except Exception:
         pass
 
+def get_hidden_imports_from_venv(package_name):
+    """
+    Dynamically collect hidden imports using PyInstaller's utility.
+    Must run in the venv where PyInstaller and the package are installed.
+    """
+    log(f"Collecting dynamic hidden imports for {package_name}...", Colors.OKCYAN)
+    script = f"from PyInstaller.utils.hooks import collect_submodules; print(','.join(collect_submodules('{package_name}')))"
+    try:
+        # Use simple subprocess to avoid log noise from 'run' wrapper
+        output = subprocess.check_output([str(PYTHON_EXEC), "-c", script], text=True).strip()
+        modules = [x.strip() for x in output.split(',') if x.strip()]
+        log(f"  Found {len(modules)} submodules for {package_name}", Colors.OKBLUE)
+        return modules
+    except Exception as e:
+        log(f"Warning: Could not collect hidden imports for {package_name}: {e}", Colors.WARNING)
+        return []
+
 def build():
     """Build the standalone executable."""
     # Get Version and Sync to VERSION file
@@ -193,8 +210,12 @@ def build():
         "pymdownx.inlinehilite", "pymdownx.keys", "pymdownx.smartsymbols",
         "pymdownx.snippets", "pymdownx.tilde", "pymdownx.caret",
         "pymdownx.mark", "pymdownx.emoji", "pymdownx.saneheaders",
-        "xhtml2pdf", "reportlab", "html5lib"
     ]
+    
+    # Dynamic collection for complex packages
+    for pkg in ["xhtml2pdf", "reportlab", "html5lib", "lxml", "docx", "bs4", "htmldocx"]:
+        hidden_imports.extend(get_hidden_imports_from_venv(pkg))
+
     for imp in hidden_imports:
         cmd.extend(["--hidden-import", imp])
 

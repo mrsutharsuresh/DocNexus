@@ -73,6 +73,9 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.secret_key = os.urandom(24)
 
+# Global Feature Manager (initialized later)
+FEATURES = None
+
 # Global Template Context
 @app.context_processor
 def inject_global_context():
@@ -203,12 +206,15 @@ def install_plugin(plugin_id):
             if success:
                 # Reload registry to activate new features immediately
                 try:
+                    logger.info(f"Hot-reload: Starting load_single_plugin for {plugin_id}")
                     from docnexus.core.loader import load_single_plugin
                     load_single_plugin(plugin_id, target_path / 'plugin.py')
-                    # Also refresh the global features list if necessary
-                    # For now, load_single_plugin registers it into FEATURES singleton
+                    logger.info(f"Hot-reload: Plugin loaded. Refreshing FeatureManager...")
+                    # Refresh the FeatureManager to pick up the new export handler
+                    FEATURES.refresh()
+                    logger.info(f"Hot-reload: FeatureManager refreshed. Current features: {[f.name for f in FEATURES._features]}")
                 except Exception as load_err:
-                     print(f"Warning: Failed to hot-reload plugin: {load_err}")
+                     logger.error(f"Failed to hot-reload plugin: {load_err}", exc_info=True)
 
                 return jsonify({'success': True, 'message': message})
             else:
@@ -297,6 +303,20 @@ try:
     logger.info(f"App sees PluginRegistry ID: {id(registry)}")
     registry.initialize_all()
     
+    registry.initialize_all()
+    
+    # Initialize FeatureManager and load plugins we just found
+    # global FEATURES  <-- Removed
+    try:
+        from docnexus.features.registry import FeatureManager
+        if FEATURES is None:
+            FEATURES = FeatureManager(registry)
+        
+        logger.info("Refreshing global FEATURES manager...")
+        FEATURES.refresh()
+    except Exception as fm_err:
+        logger.error(f"Failed to initialize FeatureManager: {fm_err}", exc_info=True)
+
     logger.info(f"Registry initialized. Plugin count: {len(registry.get_all_plugins())}")
     logger.debug(f"Registry contents: {registry.get_all_plugins()}")
     
