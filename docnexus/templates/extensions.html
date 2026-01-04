@@ -150,7 +150,7 @@
         function renderPlugins(plugins) {
             const grid = document.getElementById('pluginGrid');
 
-            if (plugins.length === 0) {
+            if (!plugins || plugins.length === 0) {
                 grid.innerHTML = `
                     <div style="grid-column: 1/-1; text-align: center; padding: 4rem; opacity: 0.7;">
                         <i class="fas fa-box-open" style="font-size: 2rem; color: var(--color-text-muted);"></i>
@@ -160,22 +160,19 @@
                 return;
             }
 
-            // Optional: Group by type if 'All' is selected? 
-            // For now, just flat list as before, relying on chips/badges.
-
             grid.innerHTML = plugins.map(p => `
                 <div class="extension-card">
                     <div class="card-header">
                         <div class="extension-icon">
-                            <i class="fas ${p.icon}"></i>
+                            ${p.icon && p.icon.startsWith('/') ? `<img src="${p.icon}" style="width:24px;height:24px;">` : `<i class="fas fa-cube"></i>`}
                         </div>
                         <div class="card-title-area">
                             <div class="extension-title">
                                 ${p.name}
-                                ${p.verified ? '<i class="fas fa-certificate verified-badge" title="Official/Bundled"></i>' : ''}
+                                ${p.type === 'bundled' ? '<i class="fas fa-certificate verified-badge" title="Official"></i>' : ''}
                             </div>
                             <div style="display:flex; align-items:center; gap:8px;">
-                                <a href="#" class="author-link">${p.author}</a>
+                                <a href="#" class="author-link">${p.author || 'DocNexus'}</a>
                                 ${p.type === 'bundled'
                     ? '<span style="font-size:10px; background:rgba(99,102,241,0.1); color:var(--color-primary); padding:2px 6px; border-radius:4px;">BUNDLED</span>'
                     : '<span style="font-size:10px; background:rgba(16,185,129,0.1); color:var(--color-success); padding:2px 6px; border-radius:4px;">INSTALLED</span>'}
@@ -183,20 +180,48 @@
                         </div>
                     </div>
                     
-                    <div class="extension-desc">${p.desc}</div>
+                    <div class="extension-desc" title="${p.description || ''}">${p.description || p.desc || 'No description'}</div>
 
                     <div class="card-stats">
-                        <span class="stat-item"><i class="fas fa-download"></i> ${p.downloads}</span>
+                        <span class="stat-item"><i class="fas fa-download"></i> ${p.downloads || '-'}</span>
                         <span class="stat-item"><i class="fas fa-star" style="color:#fbbf24;"></i> 5.0</span>
                     </div>
 
                     <div class="extension-actions">
-                        <button class="btn-manage" onclick="togglePlugin('${p.id}')">
-                            Manage
-                        </button>
+                        ${renderActionButton(p)}
                     </div>
                 </div>
             `).join('');
+        }
+
+        function renderActionButton(p) {
+            if (p.can_install && !p.installed) {
+                return `<button class="btn-manage" style="background:#10b981; color:white; border:none;" onclick="installPlugin('${p.id}', this)">
+                            <i class="fas fa-download"></i> Install
+                        </button>`;
+            }
+            return `<button class="btn-manage" onclick="togglePlugin('${p.id}')">Manage</button>`;
+        }
+
+        async function installPlugin(id, btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            try {
+                const res = await fetch(`/api/plugins/install/${id}`, { method: 'POST' });
+                const json = await res.json();
+                if (res.ok) {
+                    alert("Success: " + (json.details || "Enabled"));
+                    window.location.reload();
+                } else {
+                    alert("Error: " + json.error);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-download"></i> Retry';
+                }
+            } catch (e) {
+                alert("Error: " + e);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-download"></i> Retry';
+            }
         }
 
         function togglePlugin(id) {
