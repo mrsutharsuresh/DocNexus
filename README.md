@@ -83,6 +83,7 @@ Detailed guides are available in the `docs/` directory:
 - [User Guide](docs/USER_GUIDE.md)
 - [Architecture Overview](docs/DOCNEXUS_ARCHITECTURE.md)
 - [Plugin Architecture](docs/PLUGIN_ARCHITECTURE.md)
+- [Plugin Development Guide](docs/PLUGIN_DEV_GUIDE.md)
 - [Contributing Guidelines](docs/CONTRIBUTING.md)
 
 ---
