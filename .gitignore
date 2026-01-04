@@ -1,6 +1,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
+# Test Results
+test_export.docx
+tests/output/
 *.so
 .Python
 env/

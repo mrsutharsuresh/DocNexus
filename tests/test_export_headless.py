@@ -25,6 +25,8 @@ HTML_CONTENT = """
         </blockquote>
         <p>
             <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+            <img src="https://example.com/test.svg" alt="External SVG">
+            <img src="data:image/svg+xml;base64,fake" alt="Data SVG">
         </p>
         <h2 id="future-roadmap">🔮 Future Roadmap</h2>
     </div>
@@ -48,9 +50,14 @@ try:
             print(f"Response Size: {content_length} bytes")
             
             if content_length > 0:
-                with open("test_export.docx", "wb") as f:
+                import os
+                output_dir = os.path.join(os.path.dirname(__file__), "output")
+                os.makedirs(output_dir, exist_ok=True)
+                output_path = os.path.join(output_dir, "test_export.docx")
+                
+                with open(output_path, "wb") as f:
                     f.write(content)
-                print("SUCCESS: File downloaded as test_export.docx")
+                print(f"SUCCESS: File downloaded as {output_path}")
                 sys.exit(0)
             else:
                 print("FAILURE: Response content is empty")
