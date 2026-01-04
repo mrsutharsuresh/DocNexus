@@ -31,8 +31,7 @@ try:
     PDF_EXPORT_AVAILABLE = True
     PDF_LIB_NAME = "pdfkit"
 except Exception as e:
-    print(f"Warning: pdfkit not available: {e}")
-    print("PDF export feature will be disabled.")
+    logger.warning(f"Warning: pdfkit not available: {e}. PDF export disabled.")
     pdfkit = None
 
 # Try to import Word export libraries
@@ -44,8 +43,7 @@ try:
     WORD_EXPORT_AVAILABLE = True
     WORD_LIB_NAME = "htmldocx"
 except Exception as e:
-    print(f"Warning: htmldocx not available: {e}")
-    print("Word export feature will be disabled.")
+    logger.warning(f"Warning: htmldocx not available: {e}. Word export disabled.")
     HtmlToDocx = None
 
 # Try to import Word input libraries
@@ -54,8 +52,7 @@ try:
     import mammoth
     WORD_INPUT_AVAILABLE = True
 except Exception as e:
-    print(f"Warning: mammoth not available: {e}")
-    print("Word input feature will be disabled.")
+    logger.warning(f"Warning: mammoth not available: {e}. Word input disabled.")
     mammoth = None
 
 try:
@@ -224,9 +221,9 @@ FEATURES.register(Feature("SMART_TOPOLOGY", smart.convert_topology_to_mermaid, F
 # This allows FeatureManager to pull "Algorithm" features from plugins
 FEATURES._registry = PluginRegistry()
 # Force debug print to console
-print(f"DEBUG_STARTUP: Plugins in Registry: {FEATURES._registry.get_all_plugins()}")
+logger.debug(f"DEBUG_STARTUP: Plugins in Registry: {FEATURES._registry.get_all_plugins()}")
 FEATURES.refresh()
-print(f"DEBUG_STARTUP: Features in Manager: {[f.name for f in FEATURES._features]}")
+logger.debug(f"DEBUG_STARTUP: Features in Manager: {[f.name for f in FEATURES._features]}")
 
 
 # Context Processor for Debugging (moved here after all config is loaded)
@@ -1271,9 +1268,7 @@ def export_pdf():
         return response
         
     except Exception as e:
-        print(f"Error generating PDF: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Error generating PDF: {e}", exc_info=True)
         abort(500, description=f"Failed to generate PDF: {str(e)}")
         abort(500, description=f"Failed to generate PDF: {str(e)}")
 
@@ -1326,10 +1321,10 @@ def export_word():
             }, 413
         
         content_size_mb = html_size / (1024 * 1024)
-        print(f"Processing Word export: {filename} ({content_size_mb:.2f} MB)")
+        logger.info(f"Processing Word export: {filename} ({content_size_mb:.2f} MB)")
         
         if content_size_mb > 30:
-            print(f"Warning: Large document detected ({content_size_mb:.2f} MB). Processing may take longer...")
+            logger.warning(f"Large document detected ({content_size_mb:.2f} MB). Processing may take longer...")
         
         # Ensure filename has .docx extension
         if not filename.endswith('.docx'):
@@ -1346,7 +1341,7 @@ def export_word():
             # Fallback to html.parser if lxml not available
             soup = BeautifulSoup(html_content, 'html.parser')
         
-        print("Cleaning HTML content...")
+        logger.info("Cleaning HTML content...")
         
         # Remove all script tags
         for script in soup.find_all('script'):
@@ -1450,7 +1445,7 @@ def export_word():
                 clean_html = str(soup)
         
         # Create a new Word document
-        print("Creating Word document...")
+        logger.info("Creating Word document...")
         from docx import Document
         from docx.shared import RGBColor, Pt
         from docx.oxml import OxmlElement
@@ -1458,7 +1453,7 @@ def export_word():
         doc = Document()
         
         # Initialize the HTML to DOCX converter
-        print("Converting HTML to Word...")
+        logger.info("Converting HTML to Word...")
         new_parser = HtmlToDocx()
         
         # Parse and add cleaned HTML content to the document
@@ -1475,7 +1470,7 @@ def export_word():
         # We need to add these manually after conversion
         new_parser.add_html_to_document(clean_html, doc)
         
-        print("Post-processing document...")
+        logger.info("Post-processing document...")
         # ==== POST-PROCESSING: Add bookmarks and fix internal hyperlinks ====
         # htmldocx library doesn't support internal document bookmarks/anchors
         # We need to manually add bookmarks to headings and fix TOC links
@@ -1563,7 +1558,7 @@ def export_word():
                         cell._element.get_or_add_tcPr().append(shading_elm)
         
         # Save to BytesIO buffer
-        print("Saving document...")
+        logger.info("Saving document...")
         buffer = io.BytesIO()
         doc.save(buffer)
         buffer.seek(0)
@@ -1578,9 +1573,7 @@ def export_word():
         return response
         
     except Exception as e:
-        print(f"Error generating Word document: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Error generating Word document: {e}", exc_info=True)
         abort(500, description=f"Failed to generate Word document: {str(e)}")
 
 @app.route('/search')
