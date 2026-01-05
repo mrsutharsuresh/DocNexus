@@ -2,13 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v1.2.4] - 2026-01-04
+## [v1.2.4] - 2026-01-05
+### Added
+- **Testing**: Overhauled testing workflow. Switched to `pytest` (via `scripts/run_tests.py`), enabled single-command execution (`make test`), and centralized output to `tests/latest_results.log`.
+
+### Security
+- **PDF Export**: Implemented "Nuclear Safe Mode" that rigidly strips all external stylesheets and inline styles to prevent `xhtml2pdf` crashes on modern CSS variables.
+
 ### Fixed
 - **Word Export**: Fixed `UnrecognizedImageError` by filtering SVG images and handling external image timeouts gracefully.
 - **Word Export Content**: Fixed missing Table of Contents in exported files.
 - **Word Export Navigation**: Fixed internal TOC links to correctly navigate to document sections.
 - **Registry**: Resolved "Split-Brain" issue by unifying key classes in `docnexus.features.registry`.
 - **UI**: Restored missing UI slots (`HEADER_RIGHT`, `EXPORT_MENU`).
+- **Legacy Tests**: Updated legacy test suite (`test_loader`, `test_registry`) to align with the Phase 1 "Passive" Plugin Architecture (Duck Typing, Singleton Registry).
 
 ## [v1.2.3] - 2026-01-04
 - **Pipeline Backbone**: Implemented `Pipeline` class to construct and execute sequences of `ALGORITHM` features.

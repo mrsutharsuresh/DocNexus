@@ -1,77 +1,72 @@
-import unittest
 import sys
-import os
-import argparse
-import time
+import pytest
 from pathlib import Path
-import coverage
+import datetime
 
 # Add project root to sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-def run_tests(test_path=None, output_file=None):
+# Configuration
+TESTS_DIR = PROJECT_ROOT / 'tests'
+OUTPUT_FILE = TESTS_DIR / 'latest_results.log'
+
+def run_tests_with_pytest():
     """
-    Run tests with coverage and output results to file.
+    Runs all tests using pytest and pipes output to tests/latest_results.log.
     """
-    # Initialize Coverage
-    cov = coverage.Coverage(source=['docnexus'], omit=['*/tests/*', '*/venv/*'])
-    cov.start()
+    print(f"Running tests via Pytest...")
+    print(f"Output will be saved to: {OUTPUT_FILE}")
 
-    # Discover Tests
-    loader = unittest.TestLoader()
-    start_dir = PROJECT_ROOT / 'tests'
+    # Args for pytest
+    # -v: Verbose
+    # --tb=short: Shorter tracebacks
+    # Capture output to file is tricky with pytest.main inside python.
+    # We can use the 'Pastebin' plugin or redirect stdout/stderr.
     
-    if test_path:
-        # Run specific test file or case
-        # If test_path is a file path relative to project
-        target = PROJECT_ROOT / test_path
-        if target.exists() and target.is_file():
-            # Convert file path to module name
-            module_name = test_path.replace(os.sep, '.').replace('.py', '')
-            suite = loader.loadTestsFromName(module_name)
-        else:
-            # Try loading as dotted name
-            suite = loader.loadTestsFromName(test_path)
-    else:
-        # Run all tests
-        suite = loader.discover(str(start_dir))
-
-    # Output Buffer
-    output_stream = sys.stderr
-    if output_file:
-        output_stream = open(output_file, 'w')
-        output_stream.write(f"Test Run: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-        output_stream.write("="*40 + "\n")
-
-    # Run Tests
-    runner = unittest.TextTestRunner(stream=output_stream, verbosity=2)
-    result = runner.run(suite)
-
-    # Stop Coverage
-    cov.stop()
-    cov.save()
-
-    # Report Coverage
-    if output_file:
-        output_stream.write("\n" + "="*40 + "\n")
-        output_stream.write("Coverage Report:\n")
-        cov.report(file=output_stream)
-        output_stream.close()
-        print(f"Test results saved to {output_file}")
+    # We will use simple stdout/stderr redirection at the Python level
+    # because pytest writes to sys.stdout/sys.stderr
     
-    cov.report() # Also print to console
+    with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
+        f.write(f"Test Run: {datetime.datetime.now()}\n")
+        f.write("="*60 + "\n\n")
+        f.flush()
+        
+        # Redirection Context
+        class Tee(object):
+            def __init__(self, *files):
+                self.files = files
+            def write(self, obj):
+                for f in self.files:
+                    f.write(obj)
+                    f.flush()
+            def flush(self):
+                for f in self.files:
+                    f.flush()
+            def isatty(self):
+                return False
 
-    return result.wasSuccessful()
+        original_stdout = sys.stdout
+        original_stderr = sys.stderr
+        
+        # We redirect stdout/stderr to both console AND file
+        sys.stdout = Tee(sys.stdout, f)
+        sys.stderr = Tee(sys.stderr, f)
+        
+        try:
+            # Run Pytest on 'tests' directory
+            # We add '-ra' to show summary of (r)easons for (a)ll except passed
+            exit_code = pytest.main(["-v", "-ra", str(TESTS_DIR)])
+        finally:
+            # Restore
+            sys.stdout = original_stdout
+            sys.stderr = original_stderr
+            
+        f.write("\n" + "="*60 + "\n")
+        f.write(f"Run Completed. Exit Code: {exit_code}\n")
+        
+    return exit_code == 0
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="DocNexus Test Runner")
-    parser.add_argument('test_target', nargs='?', help="Specific test file or module (optional)")
-    parser.add_argument('--output', '-o', default='test_results.txt', help="Output file for test report")
-    
-    args = parser.parse_args()
-    
-    # Check dependencies (simplified, assuming handled by environment)
-    
-    success = run_tests(args.test_target, args.output)
+    success = run_tests_with_pytest()
     sys.exit(0 if success else 1)

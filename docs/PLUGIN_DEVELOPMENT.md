@@ -139,15 +139,27 @@ Handles conversion of document content.
 - **Handler Signature**: `def handler(content_html: str, output_path: str, meta: dict) -> bool`
 - **Meta Keys**: `extension`, `label`, `description`.
 
-## 6. Building & Bundling
+6. Building & Bundling
 
-If bundling your plugin with the DocNexus Executable (PyInstaller):
+If bundling your plugin with the DocNexus Executable (PyInstaller), you must ensure all dependencies are reachable by the frozen bootloader.
 
-1.  **Place Plugin**: Put folder in `docnexus/plugins/`.
-2.  **Scripts/Build.py**: Add external libraries to `hidden_imports`.
-      ```python
-      hidden_imports = [ ..., "xhtml2pdf", "reportlab" ]
-      ```
+### 6.1 Hidden Imports
+In `scripts/build.py`, explicitly add your plugin's dependencies to the `hidden_imports` list.
+
+```python
+# scripts/build.py
+hidden_imports = [ ..., "xhtml2pdf", "reportlab", "htmldocx" ]
+```
+
+### 6.2 Dynamic Submodules
+For complex packages (like `reportlab` or `xhtml2pdf`) that use dynamic imports, standard hidden imports are not enough. You must collect submodules:
+
+```python
+from PyInstaller.utils.hooks import collect_submodules
+# ...
+for pkg in ["xhtml2pdf", "reportlab", "html5lib", "lxml", "docx", "bs4", "htmldocx"]:
+    hidden_imports.extend(collect_submodules(pkg))
+```
 
 ## 7. Publishing
 
@@ -182,7 +194,21 @@ def export_logic(...):
         logger.error(f"Export failed: {e}", exc_info=True)
 ```
 
-**Do NOT**:
-- Do not call `logging.basicConfig()`.
-- Do not add your own `FileHandler` (unless strictly necessary for audit trails).
 - Do not use `print()`; use `logger.info()` or `logger.debug()`.
+
+## 9. Handling PDF Exports (Safe Mode)
+
+If your plugin uses `xhtml2pdf`, beware that it uses a legacy CSS2 engine that **will crash** if it encounters modern CSS3 features (like `var()`, `calc()`, `clamp()`) often found in web stylesheets (`main.css`).
+
+**The "Safe Mode" Strategy:**
+Do NOT attempt to reuse the web UI stylesheets for PDF generation. Instead:
+1.  **Strip External Links**: Remove all `<link rel="stylesheet">` tags from the HTML.
+2.  **Strip Inline Styles**: Aggressively remove `<style>` blocks and `style="..."` attributes if they might contain variables.
+3.  **Inject Safe CSS**: Provide a custom, internal stylesheet within your plugin that uses only standard CSS2 properties (e.g., standard hex colors, simple margins).
+
+```python
+# Example Safe Mode Logic
+full_html = re.sub(r'<link[^>]+rel=["\']stylesheet["\'][^>]*>', '', content_html)
+full_html = re.sub(r'<style\b[^>]*>.*?</style>', '', full_html, flags=re.DOTALL)
+# ... apply safe internal styles ...
+```

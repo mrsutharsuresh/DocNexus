@@ -39,6 +39,29 @@ Every test run generates a `test_results.txt` file in the project root containin
 
 ## Test Infrastructure
 
-*   **Runner**: `scripts/run_tests.py`
-*   **Libraries**: `unittest`, `coverage`
-*   **Fixtures**: `tests/fixtures/` contains dummy assets (like `dummy_plugin`) for integration tests.
+*   **Runner**: `scripts/run_tests.py` (Unittest) OR `pytest` (Recommended for new tests)
+*   **Libraries**: `unittest`, `pytest`, `coverage`
+
+## Current Test Modules (`tests/`)
+
+| Module | Purpose |
+| :--- | :--- |
+| `test_features.py` | Core Feature Manager lifecycle and state transitions. |
+| `test_loader.py` | Dependency Injection logic and plugin discovery. |
+| `test_registry.py` | Unified Registry (Feature registration & slots). |
+| `test_extensions_api.py` | Endpoints for installing/uninstalling plugins. |
+| `test_plugin_integration.py` | End-to-end flow of loading a dummy plugin. |
+| `test_pdf_safe_mode.py` | **[NEW]** Verifies PDF Safe Mode CSS sanitization logic. |
+| `test_export_headless.py` | Mocked export tests. |
+
+## running with Pytest (Recommended)
+
+Run all tests:
+```bash
+python -m pytest
+```
+
+Run specific test:
+```bash
+python -m pytest tests/test_pdf_safe_mode.py
+```
