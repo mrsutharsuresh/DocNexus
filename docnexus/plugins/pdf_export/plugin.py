@@ -129,6 +129,9 @@ def get_features():
     # Check "Enabled" status via marker file
     is_enabled = ENABLED_FILE.exists()
     
+    # DEBUG: Print exact status
+    print(f"PDF PLUGIN DEBUG: Checking {ENABLED_FILE} -> Exists: {is_enabled}")
+    
     features = []
     
     # We register the feature but mark it as installed/not installed

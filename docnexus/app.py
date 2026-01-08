@@ -252,10 +252,30 @@ def uninstall_plugin(plugin_id):
     if enabled_file.exists():
         try:
             os.remove(enabled_file)
-            # Todo: Ideally we should unload the plugin from memory, but Python makes unloading hard.
-            # For now, a restart might be required to fully disable, or we can remove from FEATURES.
-            # But the UI will correct itself on refresh.
-            return jsonify({'success': True, 'message': 'Plugin disabled successfully. Please restart application to fully unload features.'})
+            
+            # Hot-Reload: Trigger refresh so FeatureManager sees 'installed=False'
+            # My previous fix in registry.py will update the existing feature state.
+            try:
+                logger.info(f"Hot-reload: Plugin {plugin_id} disabled. Refreshing FeatureManager...")
+                
+                # Check if we need to reload the module to update the 'installed' flag in memory?
+                # The 'installed' flag is usually read from the file system ON module init.
+                # Just refreshing might not change the in-memory module state if it's already imported.
+                # However, FeatureManager.is_feature_installed checks meta['installed'].
+                # Does the plugin update its own meta dynamically? NO. It's set at creation.
+                # So we MUST reload the module to update the meta.
+                
+                target_plugin_py = target_path / 'plugin.py'
+                from docnexus.core.loader import load_single_plugin
+                load_single_plugin(plugin_id, target_plugin_py)
+                
+                FEATURES.refresh()
+                logger.info("Hot-reload: FeatureManager refreshed.")
+                
+                return jsonify({'success': True, 'message': 'Plugin disabled successfully.'})
+            except Exception as e:
+                logger.warning(f"Hot-reload uninstall warning: {e}")
+                return jsonify({'success': True, 'message': 'Plugin disabled, restart recommended.'})
         except Exception as e:
             return jsonify({'error': f"Failed to disable plugin: {e}"}), 500
             
@@ -1373,6 +1393,7 @@ def handle_export_request(format_ext):
         
         # Resolve Handler
         handler = FEATURES.get_export_handler(format_ext)
+        logger.debug(f"Handle Export Request: Resolved handler for {format_ext} -> {handler}")
         
         if not handler:
             # Return specific error for frontend "Upsell" logic

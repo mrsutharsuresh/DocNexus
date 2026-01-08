@@ -78,9 +78,53 @@
         </div>
     </main>
 
+    <!-- Toast Container -->
+    <div id="toast-container"
+        style="position: fixed; bottom: 24px; right: 24px; z-index: 3000; display: flex; flex-direction: column; gap: 10px;">
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"
+        style="position: fixed; bottom: 24px; right: 24px; z-index: 3000; display: flex; flex-direction: column; gap: 10px;">
+    </div>
+
+    <!-- Uninstall Confirmation Modal (Structure now matches updated theme.css) -->
+    <div id="uninstall-modal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 style="color:var(--color-danger);"><i class="fas fa-exclamation-triangle"></i> Disable Extension?
+                </h3>
+                <button class="btn-icon" style="width:32px;height:32px;" onclick="closeUninstallModal()">
+                    <i class="fas fa-times" style="font-size:0.9rem;"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to disable <strong><span id="uninstall-name">this extension</span></strong>?
+                </p>
+                <div
+                    style="background:var(--color-bg-secondary); padding:12px; border-radius:8px; margin-top:12px; font-size:0.9rem; border:1px solid var(--color-border-muted);">
+                    <i class="fas fa-info-circle" style="color:var(--color-text-muted);"></i> Features relying on this
+                    extension will stop working immediately.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeUninstallModal()">Cancel</button>
+                <button id="confirm-uninstall-btn" class="btn"
+                    style="background:var(--color-danger); color:white; border:none; box-shadow:var(--shadow-md);">
+                    <i class="fas fa-power-off"></i> Disable
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Logic -->
     <script>
-        // Separate JS logic for Extensions Page
-        let allPlugins = []; // Store fetched plugins
+        // Store fetched plugins
+        let allPlugins = [];
+
+        // Uninstall Modal State
+        let pendingUninstallId = null;
+        let pendingUninstallBtn = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             // Search Logic
@@ -104,14 +148,14 @@
                 });
             }
 
-            // Simulate slight network delay for effect
-            // Ensure theme manager init is called if not handled by script below (it is)
-            setTimeout(fetchRegistry, 600);
+            // Init load
+            setTimeout(fetchRegistry, 300);
         });
+
+        // --- Core Functions ---
 
         async function fetchRegistry() {
             try {
-                // Fetch from real API
                 const response = await fetch('/api/plugins');
                 if (!response.ok) throw new Error("Failed to fetch plugins");
                 allPlugins = await response.json();
@@ -127,23 +171,17 @@
         }
 
         function filterPlugins(btn, category) {
-            // Update UI
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
-            // Filter Data
             if (category === 'all') {
                 renderPlugins(allPlugins);
             } else if (category === 'bundled') {
-                const filtered = allPlugins.filter(p => p.type === 'bundled');
-                renderPlugins(filtered);
+                renderPlugins(allPlugins.filter(p => p.type === 'bundled'));
             } else if (category === 'installed') {
-                const filtered = allPlugins.filter(p => p.type === 'installed');
-                renderPlugins(filtered);
+                renderPlugins(allPlugins.filter(p => p.type === 'installed'));
             } else {
-                // Filter by category property (e.g. 'export', 'theme')
-                const filtered = allPlugins.filter(p => p.category === category);
-                renderPlugins(filtered);
+                renderPlugins(allPlugins.filter(p => p.category === category));
             }
         }
 
@@ -175,7 +213,7 @@
                                 <a href="#" class="author-link">${p.author || 'DocNexus'}</a>
                                 ${p.type === 'bundled'
                     ? '<span style="font-size:10px; background:rgba(99,102,241,0.1); color:var(--color-primary); padding:2px 6px; border-radius:4px;">BUNDLED</span>'
-                    : '<span style="font-size:10px; background:rgba(16,185,129,0.1); color:var(--color-success); padding:2px 6px; border-radius:4px;">INSTALLED</span>'}
+                    : (p.installed ? '<span style="font-size:10px; background:rgba(16,185,129,0.1); color:var(--color-success); padding:2px 6px; border-radius:4px;">INSTALLED</span>' : '')}
                             </div>
                         </div>
                     </div>
@@ -195,74 +233,159 @@
         }
 
         function renderActionButton(p) {
-            // Case 1: Not installed, but installable -> Green "Install" button
             if (p.can_install && !p.installed) {
                 return `<button class="btn-manage" style="background:#10b981; color:white; border:none;" onclick="installPlugin('${p.id}', this)">
                             <i class="fas fa-download"></i> Install
                         </button>`;
             }
-            // Case 2: Installed AND has uninstall capability -> Red/Outline "Uninstall" button (via toggle)
             if (p.can_install && p.installed) {
-                return `<button class="btn-manage" style="border-color:#ef4444; color:#ef4444;" onclick="uninstallPlugin('${p.id}', this)">
-                            <i class="fas fa-trash"></i> Uninstall
+                // IMPORTANT: Ensure onclick points to current scope
+                return `<button class="btn-manage" style="border-color:var(--color-danger); color:var(--color-danger);" onclick="triggerUninstall('${p.id}', this)">
+                            <i class="fas fa-trash"></i> Disable
                         </button>`;
             }
-
-            // Case 3: Core Bundled (installed, no can_install) -> Locked "Manage" button
             return `<button class="btn-manage" onclick="togglePlugin('${p.id}')">Manage</button>`;
         }
 
+        // --- Action Handlers ---
+
         async function installPlugin(id, btn) {
+            const originalContent = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Installing...';
+
             try {
                 const res = await fetch(`/api/plugins/install/${id}`, { method: 'POST' });
                 const json = await res.json();
                 if (res.ok) {
-                    alert("Success: " + (json.message || "Enabled"));
-                    window.location.reload();
+                    showToast(json.message || "Extension added.", "success");
+                    fetchRegistry();
                 } else {
-                    alert("Error: " + json.error);
+                    showToast("Error: " + json.error, "error");
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-download"></i> Retry';
+                    btn.innerHTML = originalContent;
                 }
             } catch (e) {
-                alert("Error: " + e);
+                showToast("Network Error: " + e, "error");
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-download"></i> Retry';
+                btn.innerHTML = originalContent;
             }
         }
 
-        async function uninstallPlugin(id, btn) {
-            if (!confirm("Are you sure you want to disable this plugin?")) return;
+        // Renamed to avoid any strict mode / scope conflicts
+        function triggerUninstall(id, btn) {
+            // Store context
+            pendingUninstallId = id;
+            pendingUninstallBtn = btn;
 
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            // Populate
+            const plugin = allPlugins.find(p => p.id === id);
+            document.getElementById('uninstall-name').textContent = plugin ? plugin.name : 'this extension';
+
+            // Show
+            document.getElementById('uninstall-modal').classList.add('show');
+
+            // Re-bind confirm button to be sure
+            const confirmBtn = document.getElementById('confirm-uninstall-btn');
+            confirmBtn.onclick = performUninstall;
+        }
+
+        function closeUninstallModal() {
+            document.getElementById('uninstall-modal').classList.remove('show');
+            pendingUninstallId = null;
+            pendingUninstallBtn = null;
+        }
+
+        async function performUninstall() {
+            if (!pendingUninstallId) return;
+
+            const id = pendingUninstallId;
+            const btn = pendingUninstallBtn;
+            closeUninstallModal();
+
+            if (btn) {
+                var originalContent = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Disabling...';
+            }
+
             try {
                 const res = await fetch(`/api/plugins/uninstall/${id}`, { method: 'POST' });
                 const json = await res.json();
                 if (res.ok) {
-                    alert("Plugin disabled.");
-                    window.location.reload();
+                    showToast("Extension disabled.", "info");
+                    fetchRegistry();
                 } else {
-                    alert("Error: " + json.error);
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-trash"></i> Uninstall';
+                    showToast("Error: " + json.error, "error");
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = originalContent;
+                    }
                 }
             } catch (e) {
-                alert("Error: " + e);
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-trash"></i> Uninstall';
+                showToast("Error: " + e, "error");
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                }
             }
         }
 
         function togglePlugin(id) {
-            const plugin = allPlugins.find(p => p.id === id);
-            // This is mostly for 'word_export' or other core plugins
-            alert('This is a core bundled plugin. It is always active and cannot be uninstalled.');
+            showToast('Core extensions cannot be modified.', 'info');
+        }
+
+        // --- Toast Logic ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            const icon = type === 'success' ? '<i class="fas fa-check-circle"></i>' :
+                (type === 'error' ? '<i class="fas fa-exclamation-circle"></i>' : '<i class="fas fa-info-circle"></i>');
+
+            const colors = {
+                success: '#10b981',
+                error: '#ef4444',
+                info: '#3b82f6'
+            };
+            const color = colors[type] || colors.info;
+
+            toast.style.cssText = `
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                background: var(--color-bg-primary);
+                color: var(--color-text-primary);
+                border-left: 4px solid ${color};
+                padding: 16px;
+                border-radius: 4px;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                min-width: 320px;
+                opacity: 0;
+                transform: translateX(20px);
+                transition: all 0.3s ease;
+                font-family: inherit;
+                font-size: 0.95rem;
+                z-index: 3001;
+            `;
+
+            toast.innerHTML = `
+                <div style="color: ${color}; font-size: 1.25rem;">${icon}</div>
+                <div style="font-weight:500;">${message}</div>
+            `;
+
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateX(0)';
+            });
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
         }
     </script>
-    <script src="{{ url_for('static', filename='theme.js') }}"></script>
 </body>
 
 </html>

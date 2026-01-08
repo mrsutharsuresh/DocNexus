@@ -138,7 +138,7 @@ def load_single_plugin(name: str, path: Path, registry_instance=None) -> None:
                     for f in features:
                         try:
                             actual_registry.register(f)
-                            logger.info(f"Loader: Registered feature '{f.name}' (Type: {f.type}) from {name}")
+                            logger.info(f"Loader: Registered feature '{f.name}' (Type: {f.type}) from {name}. Meta: {f.meta}")
                             count += 1
                         except Exception as reg_err:
                             logger.error(f"Loader: Failed to register feature {f.name} from {name}: {reg_err}")

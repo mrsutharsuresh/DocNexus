@@ -131,8 +131,17 @@ class FeatureManager:
         for plugin in plugins:
             # Duck typing check instead of strict isinstance to survive import/reload cycles
             if hasattr(plugin, 'name') and hasattr(plugin, 'type') and hasattr(plugin, 'handler'):
-                 # Check for duplicates by name
-                 if not any(f.name == plugin.name for f in self._features):
+                 # Check for existing feature by name
+                 existing_idx = next((i for i, f in enumerate(self._features) if f.name == plugin.name), -1)
+                 
+                 if existing_idx >= 0:
+                     # Update/Replace existing feature
+                     # This ensures that if the plugin reloaded with new metadata (e.g. installed=True), 
+                     # we use the latest version.
+                     old_feature = self._features[existing_idx]
+                     self._features[existing_idx] = plugin
+                     logger.info(f"FeatureManager: Updated feature '{plugin.name}' (State: {plugin.state})")
+                 else:
                     self._features.append(plugin)
                     count += 1
                     logger.debug(f"Registered plugin feature (duck-typed): {plugin.name}")
@@ -140,26 +149,58 @@ class FeatureManager:
                  # Legacy path (should be unused now)
                  pass
 
-        logger.info(f"FeatureManager: Loaded {count} features. Total: {len(self._features)}")
+        logger.info(f"FeatureManager: Loaded/Updated features. Total: {len(self._features)}")
+
+    def is_feature_installed(self, feature: Feature) -> bool:
+        """
+        Centralized validation for feature availability.
+        Checks:
+        1. 'installed' meta flag (Plugins)
+        2. Any future license checks or dependency checks
+        """
+        # Default to True (Core features usually don't have this flag)
+        installed = feature.meta.get('installed', True)
+        
+        # DEBUG LOGGING for validation
+        if not installed:
+            logger.debug(f"FeatureManager: BLOCKED access to uninstalled feature '{feature.name}'")
+        else:
+            # logger.debug(f"FeatureManager: ALLOWED access to feature '{feature.name}'")
+            pass
+            
+        return installed
 
     def get_export_handler(self, format_ext: str) -> Optional[Callable]:
         """
         Retrieve a registered export handler for a specific format extension.
         """
         logger.debug(f"FeatureManager: Looking for export handler for '{format_ext}'...")
+        
         for feature in self._features:
             # Flexible type checking
             ft_type = str(feature.type) # e.g. "FeatureType.EXPORT_HANDLER"
             
             if "EXPORT_HANDLER" in ft_type:
+                match = False
                 # Check meta 'extension' tag first
                 if getattr(feature, 'meta', {}).get('extension') == format_ext:
-                    logger.info(f"FeatureManager: Found handler for {format_ext} (via meta)")
-                    return feature.handler
+                    match = True
                 # Fallback to name match
-                if feature.name == format_ext or feature.name == f"{format_ext}_export":
-                    logger.info(f"FeatureManager: Found handler for {format_ext} (via name)")
-                    return feature.handler
+                elif feature.name == format_ext or feature.name == f"{format_ext}_export":
+                   match = True
+                   
+                if match:
+                    # Enforce Centralized Control
+                    if self.is_feature_installed(feature):
+                        logger.info(f"FeatureManager: Found and Verified handler for {format_ext} ({feature.name})")
+                        return feature.handler
+                    else:
+                        logger.warning(f"FeatureManager: Found handler for {format_ext} ({feature.name}) but it is NOT INSTALLED.")
+                        # Continue searching? Or return None immediately to block?
+                        # If we find a match but it's uninstalled, we should probably stop and return None 
+                        # to prevent finding a "fallback" (though unlikely for same ext).
+                        # returning None triggers the 404 MISSING_PLUGIN workflow.
+                        return None
         
         logger.warning(f"FeatureManager: No handler found for {format_ext}. Available: {[f.name for f in self._features]}")
         return None
@@ -177,6 +218,10 @@ class FeatureManager:
             if f.type != FeatureType.ALGORITHM:
                 continue
 
+            # Enforce Centralized Control
+            if not self.is_feature_installed(f):
+                continue
+                
             if f.state == FeatureState.STANDARD:
                 pipeline.add_step(f.handler)
             elif enable_experimental and f.state == FeatureState.EXPERIMENTAL:
