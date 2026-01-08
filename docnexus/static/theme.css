@@ -456,8 +456,8 @@ header {
 }
 
 .modal-body {
-    padding: var(--space-4) var(--space-4);
-    /* Sleek padding */
+    padding: var(--space-3) var(--space-4);
+    /* Reduced from space-4 (24px) to space-3 (16px) */
     color: var(--color-text-secondary);
     font-size: 0.95rem;
     line-height: 1.5;
@@ -471,7 +471,6 @@ header {
     padding: var(--space-3) var(--space-4);
     border-top: 1px solid var(--color-border-muted);
     background: var(--color-bg-primary);
-    /* Match card bg */
 }
 
 /* Plugin Preview Card in Modal - IMPROVED */
@@ -480,7 +479,8 @@ header {
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-lg);
     padding: 12px;
-    margin: var(--space-3) 0 var(--space-1) 0;
+    margin: 12px 0 0 0;
+    /* Reduced top margin from 16px (space-3) to 12px for tighter coupling */
     display: flex;
     align-items: center;
     gap: var(--space-3);
