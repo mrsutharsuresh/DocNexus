@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 - **Toast Notifications**: Replaced browser alerts with a modern, non-blocking toast notification system (Success/Error/Info) in the Extensions Marketplace.
 - **Professional UI**: Updated "Extension Required" and "Uninstall Confirmation" modals to use a clean, solid "Professional Card" aesthetic (removing glassmorphism) with refined spacing and typography.
 - **Hot-Reload**: Implemented true hot-reload for extensions. Installing an extension immediately activates it, and uninstalling immediately deactivates it without requiring a server restart.
+- **Architectural Refactor**: Moved backend Editor logic (`save_document`) to a bundled plugin (`docnexus.plugins.editor`), validating the core-as-plugins architecture.
 
 ### Fixed
 - **Uninstall Logic**: Fixed critical bug where uninstalling a plugin did not remove it from active memory, allowing it to function until restart. Now forces a module reload.

@@ -210,6 +210,9 @@ def build():
         "pymdownx.inlinehilite", "pymdownx.keys", "pymdownx.smartsymbols",
         "pymdownx.snippets", "pymdownx.tilde", "pymdownx.caret",
         "pymdownx.mark", "pymdownx.emoji", "pymdownx.saneheaders",
+        # Core Plugins
+        "docnexus.plugins.editor",
+        "docnexus.plugins.editor.routes",
     ]
     
     # Dynamic collection for complex packages

@@ -139,7 +139,24 @@ Handles conversion of document content.
 - **Handler Signature**: `def handler(content_html: str, output_path: str, meta: dict) -> bool`
 - **Meta Keys**: `extension`, `label`, `description`.
 
-6. Building & Bundling
+### Flask Blueprint (API Extensions)
+Plugins can define a standard Flask Blueprint to expose custom API endpoints.
+- **Variable Name**: Define a `blueprint` variable at the module level in `plugin.py`.
+- **Loader Behavior**: The loader automatically detects this variable and registers it with the main Flask app.
+- **Best Practice**: Use a unique name for your blueprint to avoid collisions (e.g., `bp_myplugin`).
+
+```python
+# plugin.py
+from flask import Blueprint, jsonify
+
+blueprint = Blueprint('my_plugin', __name__)
+
+@blueprint.route('/api/my-custom-endpoint')
+def my_endpoint():
+    return jsonify({'status': 'ok'})
+```
+
+## 6. Building & Bundling
 
 If bundling your plugin with the DocNexus Executable (PyInstaller), you must ensure all dependencies are reachable by the frozen bootloader.
 

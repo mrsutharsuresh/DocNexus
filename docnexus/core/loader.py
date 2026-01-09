@@ -145,7 +145,16 @@ def load_single_plugin(name: str, path: Path, registry_instance=None) -> None:
                     
                     if count > 0:
                         logger.info(f"Loader: Successfully registered {count} features from {name}")
+
+            # Check for Blueprint
+            if hasattr(module, 'blueprint'):
+                try:
+                    actual_registry.register_blueprint(module.blueprint)
+                    logger.info(f"Loader: Registered blueprint from {name}")
+                except Exception as bp_err:
+                    logger.error(f"Loader: Failed to register blueprint from {name}: {bp_err}")
             else:
+                pass
                 logger.info(f"Loader: No get_features() found in {name}")
                 
     except Exception as e:

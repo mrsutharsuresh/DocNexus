@@ -60,7 +60,10 @@ class PluginRegistry:
         if cls._instance is None:
             cls._instance = super(PluginRegistry, cls).__new__(cls)
             cls._instance._plugins = []
+            cls._instance = super(PluginRegistry, cls).__new__(cls)
+            cls._instance._plugins = []
             cls._instance._custom_slots = {}
+            cls._instance._blueprints = []
         return cls._instance
 
     def register(self, plugin_or_feature: Any):
@@ -89,6 +92,21 @@ class PluginRegistry:
 
     def get_all_plugins(self) -> List[Any]:
         return self._plugins
+
+    def register_blueprint(self, bp: Any):
+        """Register a Flask Blueprint."""
+        if bp not in self._blueprints:
+            self._blueprints.append(bp)
+            logger.info(f"PluginRegistry: Registered blueprint {bp.name}")
+
+    def register_blueprints(self, app):
+        """Register all collected blueprints with the Flask app."""
+        for bp in self._blueprints:
+            try:
+                app.register_blueprint(bp)
+                logger.info(f"Registered blueprint: {bp.name}")
+            except Exception as e:
+                logger.error(f"Failed to register blueprint {bp.name}: {e}")
     
     def initialize_all(self):
         """

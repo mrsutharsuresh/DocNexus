@@ -70,8 +70,6 @@ else:
 # Create Flask App (SINGLE INSTANCE)
 app = Flask(__name__, **flask_kwargs)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-app.secret_key = os.urandom(24)
 
 # Global Feature Manager (initialized later)
 FEATURES = None
@@ -316,14 +314,30 @@ try:
     # Force loader logging to ensure we see plugin discovery
     logging.getLogger('docnexus.core.loader').setLevel(logging.DEBUG)
     
+    # Initialize Registry
     registry = PluginRegistry()
     logger.info(f"App sees PluginRegistry ID: {id(registry)}")
+    
+    # Load Plugins
     from docnexus.core.loader import load_plugins
     load_plugins(registry)
     logger.info(f"App sees PluginRegistry ID: {id(registry)}")
     registry.initialize_all()
     
-    registry.initialize_all()
+    if hasattr(registry, 'register_blueprints'):
+        registry.register_blueprints(app)
+        
+        # Fallback: Explicitly register editor if missing (fixes loader discovery issues)
+        try:
+            from docnexus.plugins.editor.plugin import blueprint as editor_bp
+            if 'editor' not in [bp.name for bp in app.blueprints.values()]:
+                app.register_blueprint(editor_bp)
+                logger.info("Registered editor blueprint (fallback)")
+        except Exception as e:
+            logger.warning(f"Fallback registration skipped: {e}")
+            
+    else:
+        logger.error("Registry missing register_blueprints method!")
     
     # Initialize FeatureManager and load plugins we just found
     # global FEATURES  <-- Removed
@@ -1497,107 +1511,7 @@ def static_files(filename):
     """Serve static files."""
     return send_from_directory('static', filename)
 
-# ============================================================================
-# NEW ROUTES FOR v1.4.0 FEATURES
-# ============================================================================
-
-@app.route('/api/get-source/<path:filename>')
-def get_source(filename):
-    """Get original source content for editing."""
-    try:
-        file_path = MD_FOLDER / filename
-        
-        if not file_path.exists() or file_path.suffix.lower() not in ALLOWED_EXTENSIONS:
-            logger.warning(f"Source file not found or invalid: {file_path}")
-            abort(404)
-        
-        # Don't allow editing Word files
-        if file_path.suffix.lower() == '.docx':
-            return jsonify({'error': 'Word documents cannot be edited directly'}), 400
-        
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-        
-        logger.info(f"Retrieved source for editing: {filename}")
-        return jsonify({'content': content, 'filename': filename, 'size': len(content)})
-    
-    except Exception as e:
-        logger.error(f"Error getting source {filename}: {e}", exc_info=True)
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/save-document', methods=['POST'])
-def save_document():
-    """Save edited document with backup."""
-    try:
-        data = request.get_json()
-        filename = data.get('filename')
-        content = data.get('content')
-        
-        if not filename or content is None:
-            return jsonify({'error': 'Missing filename or content'}), 400
-        
-        # Security: Prevent directory traversal
-        if '..' in filename or filename.startswith('/') or filename.startswith('\\'):
-            logger.warning(f"Attempted directory traversal: {filename}")
-            return jsonify({'error': 'Invalid filename'}), 403
-        
-        file_path = MD_FOLDER / filename
-        
-        if not file_path.exists():
-            return jsonify({'error': 'File not found'}), 404
-        
-        # Create backup
-        backup_path = file_path.with_suffix(file_path.suffix + '.bak')
-        try:
-            shutil.copy(file_path, backup_path)
-            logger.info(f"Backup created: {backup_path}")
-        except Exception as e:
-            logger.error(f"Failed to create backup: {e}")
-            return jsonify({'error': 'Failed to create backup'}), 500
-        
-        # Write new content
-        try:
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(content)
-            logger.info(f"Document saved: {filename}, size: {len(content)} bytes")
-            return jsonify({'success': True, 'backup': str(backup_path), 'size': len(content)})
-        except Exception as e:
-            # Restore from backup if write failed
-            if backup_path.exists():
-                shutil.copy(backup_path, file_path)
-            logger.error(f"Failed to save document: {e}")
-            return jsonify({'error': 'Failed to save document'}), 500
-    
-    except Exception as e:
-        logger.error(f"Error in save_document: {e}", exc_info=True)
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/download-logs')
-def download_logs():
-    """Create sanitized ZIP of logs for user download."""
-    try:
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        zip_filename = f'omnidoc_logs_{timestamp}.zip'
-        zip_path = LOG_DIR / zip_filename
-        
-        logger.info(f"Creating log archive: {zip_filename}")
-        
-        # Create ZIP
-        with zipfile.ZipFile(zip_path, 'w') as zipf:
-            for log_file in LOG_DIR.glob('omnidoc.log*'):
-                try:
-                    # Sanitize content
-                    sanitized_content = sanitize_log_content(log_file.read_text(encoding='utf-8', errors='ignore'))
-                    zipf.writestr(log_file.name, sanitized_content)
-                except Exception as e:
-                    logger.error(f"Error adding log file {log_file}: {e}")
-        
-        logger.info(f"Log archive created: {zip_path}")
-        return send_from_directory(LOG_DIR, zip_filename, as_attachment=True)
-    
-    except Exception as e:
-        logger.error(f"Error creating log archive: {e}", exc_info=True)
-        return jsonify({'error': 'Failed to create log archive'}), 500
+# Legacy save_document/get_source routes removed and migrated to 'editor' plugin.
 
 @app.route('/api/workspaces', methods=['GET'])
 def get_workspaces():
