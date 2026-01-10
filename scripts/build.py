@@ -234,11 +234,11 @@ def build():
     
     run(cmd)
     
-    # Copy Examples Folder for Distribution
+    # Copy Examples Folder for Distribution as 'workspace'
     examples_src = PROJECT_ROOT / "examples"
-    examples_dst = OUTPUT_DIR / "examples"
+    examples_dst = OUTPUT_DIR / "workspace"
     if examples_src.exists():
-        log(f"Copying examples to dist: {examples_dst}", Colors.OKGREEN)
+        log(f"Copying examples to dist/workspace: {examples_dst}", Colors.OKGREEN)
         if examples_dst.exists():
             shutil.rmtree(examples_dst)
         shutil.copytree(examples_src, examples_dst)
@@ -256,10 +256,45 @@ def build():
 
 def release():
     """Build and Zip."""
+    # 1. Build
     build()
-    log("Creating Release Zip...")
-    # TODO: Implement zipping logic similar to make.ps1
-    pass
+    
+    # 2. Get Version
+    try:
+        init_file = PROJECT_ROOT / "docnexus" / "version_info.py"
+        with open(init_file) as f:
+            for line in f:
+                if "__version__" in line:
+                    version = line.split("'")[1]
+                    break
+    except:
+        version = "0.0.0"
+        
+    release_name = f"DocNexus_v{version}"
+    release_dir = PROJECT_ROOT / "releases" / release_name
+    
+    log(f"Creating Release: {release_name}", Colors.OKCYAN)
+    
+    # 3. Create Release Directory
+    if release_dir.exists():
+        shutil.rmtree(release_dir)
+    release_dir.mkdir(parents=True)
+    
+    # 4. Copy Artifacts
+    log("Copying artifacts...", Colors.OKBLUE)
+    # Copy contents of output dir
+    for item in OUTPUT_DIR.iterdir():
+        if item.is_dir():
+            shutil.copytree(item, release_dir / item.name)
+        else:
+            shutil.copy2(item, release_dir / item.name)
+            
+    # 5. Zip
+    zip_path = PROJECT_ROOT / "releases" / f"{release_name}.zip"
+    log(f"Zipping to {zip_path}...", Colors.OKGREEN)
+    shutil.make_archive(str(zip_path.with_suffix('')), 'zip', release_dir)
+    
+    log(f"Release Complete: {zip_path}", Colors.BOLD)
 
 def run_dev():
     """Run from source."""

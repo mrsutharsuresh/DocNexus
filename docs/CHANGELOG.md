@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [v1.2.4] - 2026-01-10
 ### Fixed
+- **Editor Plugin**: Fixed critical `Feature` signature mismatch that prevented the Editor from loading in the bundled release (added `state` and `feature_type` args).
+- **Blueprint Registration**: Fixed `loader.py` missing the Editor API blueprint due to variable naming mismatch.
 - **Plugin Detection**: Fixed critical regression where Export plugins (Word/PDF) were incorrectly reported as "Missing" even when installed. The issue was due to the backend verifying logic not syncing with the persisted plugin state.
 - **Startup Crash**: Fixed `AttributeError` in `PluginState` and `UnboundLocalError` in `Loader` that caused the application to crash or fail to load plugins at startup.
 - **PDF Export**: Fixed a `SyntaxError` in the PDF Export plugin that prevented it from loading.

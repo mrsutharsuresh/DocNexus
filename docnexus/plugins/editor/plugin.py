@@ -3,11 +3,12 @@ from pathlib import Path
 import shutil
 import logging
 import sys
-from docnexus.features.registry import Feature, FeatureType
+from docnexus.features.registry import Feature, FeatureType, FeatureState
 
 # Create Blueprint
 # Create Blueprint
 editor_bp = Blueprint('editor', __name__)
+blueprint = editor_bp
 logger = logging.getLogger(__name__)
 
 def get_config():
@@ -96,10 +97,10 @@ def get_features():
     return [
         Feature(
             name="Doc Editor",
-            type=FeatureType.UI_EXTENSION,
-            source="bundled",
-            state=None, # Optional
-            handler=None
+            handler=None,
+            state=FeatureState.STANDARD,
+            feature_type=FeatureType.UI_EXTENSION,
+            meta={"source": "bundled"}
         )
     ]
 
