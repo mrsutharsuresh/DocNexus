@@ -13,6 +13,9 @@ def export_pdf(content_html: str) -> bytes:
     Export content to PDF using xhtml2pdf.
     Returns bytes.
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     try:
         from xhtml2pdf import pisa
         # Prepare content with robust CSS handling
@@ -103,6 +106,7 @@ def export_pdf(content_html: str) -> bytes:
         if pisa_status.err:
             raise RuntimeError(f"PDF generation error: {pisa_status.err}")
             
+        logger.info(f"PDFExport: Generated {result.getbuffer().nbytes} bytes.")
         return result.getvalue()
         
     except ImportError as ie:

@@ -54,7 +54,7 @@ def export_to_word(html_content: str) -> bytes:
     if html_size > MAX_EXPORT_HTML_SIZE:
         raise ValueError(f"Content too large ({html_size/1024/1024:.2f} MB). Max {MAX_EXPORT_HTML_SIZE/1024/1024} MB.")
 
-    logger.info(f"Generating Word Document from {html_size} bytes of HTML...")
+    logger.info(f"WordExport: Generating document from {html_size} bytes of HTML...")
 
     # Pre-process HTML with BeautifulSoup
     try:
@@ -293,7 +293,8 @@ def export_to_word(html_content: str) -> bytes:
         buffer.seek(0)
         
     # Context exits, temp dir deleted.
-    logger.info("Word export complete.")
+    # Context exits, temp dir deleted.
+    logger.info("WordExport: Complete. Returning bytes.")
     return buffer.getvalue()
 
 # Expose features for FeatureManager

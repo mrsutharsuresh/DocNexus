@@ -320,7 +320,8 @@ LOG_DIR = BASE_DIR / 'logs'
 setup_logging(LOG_DIR, DEBUG_MODE)
 
 logger = logging.getLogger(__name__)
-logger.info(f"Application starting - Version {VERSION}")
+logger = logging.getLogger(__name__)
+logger.info(f"Application starting - Version {VERSION} | Debug Mode: {DEBUG_MODE}")
 
 # Initialize Plugins
 try:
@@ -349,6 +350,8 @@ try:
             if 'editor' not in [bp.name for bp in app.blueprints.values()]:
                 app.register_blueprint(editor_bp)
                 logger.info("Registered editor blueprint (fallback)")
+            else:
+                 logger.info("Editor blueprint already registered via registry.")
         except Exception as e:
             logger.warning(f"Fallback registration skipped: {e}")
             
