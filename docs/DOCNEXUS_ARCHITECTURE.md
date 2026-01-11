@@ -10,24 +10,24 @@ The application consists of three primary functional blocks: the **Input Process
 
 ```mermaid
 graph LR
-    subgraph InputSources ["Block 1: Input Sources"]
-        FS[Filesystem<br/>(.md Files)]
-        Remote[Remote Sources<br/>(Future: S3/Git)]
-        User[User Input<br/>(Editor/Settings)]
+    subgraph "Block 1: Input Sources"
+        FS["Filesystem<br/>(.md Files)"]
+        Remote["Remote Sources<br/>(Future: S3/Git)"]
+        User["User Input<br/>(Editor/Settings)"]
     end
 
-    subgraph CoreKernel ["Block 2: Core Kernel"]
-        Router[Flask Router<br/>(API/Views)]
-        Loader[Module Loader<br/>(Discovery)]
-        Registry[Feature Registry<br/>(Database)]
-        Manager[Feature Facade<br/>(Logic)]
-        Pipeline[Render Pipeline<br/>(Execution Chain)]
+    subgraph "Block 2: Core Kernel"
+        Router["Flask Router<br/>(API/Views)"]
+        Loader["Module Loader<br/>(Discovery)"]
+        Registry["Feature Registry<br/>(Database)"]
+        Manager["Feature Facade<br/>(Logic)"]
+        Pipeline["Render Pipeline<br/>(Execution Chain)"]
     end
 
-    subgraph OutputEngines ["Block 3: Output Engines"]
-        HTML[Web Engine<br/>(Jinja2 + Theme)]
-        PDF[PDF Engine<br/>(xhtml2pdf)]
-        DOCX[Word Engine<br/>(python-docx)]
+    subgraph "Block 3: Output Engines"
+        HTML["Web Engine<br/>(Jinja2 + Theme)"]
+        PDF["PDF Engine<br/>(xhtml2pdf)"]
+        DOCX["Word Engine<br/>(python-docx)"]
     end
 
     FS --> Router

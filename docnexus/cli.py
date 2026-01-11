@@ -10,13 +10,15 @@ from pathlib import Path
 # Add parent directory to path to import docnexus
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from docnexus import __version__, __description__
-
+from docnexus.version_info import __version__, __build_timestamp__, __build_type__
 
 def print_version():
     """Print version information."""
-    print(f"Markdown Documentation Viewer v{__version__}")
-    print(f"{__description__}")
+    print(f"DocNexus v{__version__}")
+    print(f"Build: {__build_timestamp__}")
+    print(f"Build Type: {__build_type__}")
+    # Description removed to keep it clean, or keep it if preferred.
+    # print(f"{__description__}")
 
 
 def start_server(args):

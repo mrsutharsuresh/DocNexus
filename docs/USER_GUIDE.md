@@ -62,6 +62,7 @@ make build    # Creates a standalone executable in build/output/
 ```bash
 pip install docnexus
 docnexus start
+docnexus --version  # Check version, build time, and build type (Dev/Release)
 ```
 
 ---

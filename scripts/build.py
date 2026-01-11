@@ -156,7 +156,7 @@ def get_hidden_imports_from_venv(package_name):
         log(f"Warning: Could not collect hidden imports for {package_name}: {e}", Colors.WARNING)
         return []
 
-def build():
+def build(build_type="Dev"):
     """Build the standalone executable."""
     # Get Version and Sync to VERSION file
     try:
@@ -171,7 +171,17 @@ def build():
         version_file = PROJECT_ROOT / "VERSION"
         with open(version_file, "w") as vf:
             vf.write(version)
+            
+        # Inject Build Timestamp into version_info.py for the build
+        # We rewrite the file with the timestamp
+        timestamp = __import__('datetime').datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(init_file, "w") as f:
+            f.write(f"__version__ = '{version}'\n")
+            f.write(f"__build_timestamp__ = '{timestamp}'\n")
+            f.write(f"__build_type__ = '{build_type}'\n")
+            
         log(f"Synced VERSION file to {version}", Colors.OKBLUE)
+        log(f"Injected timestamp {timestamp}", Colors.OKBLUE)
         
     except Exception as e:
         log(f"Warning: Could not sync version: {e}", Colors.WARNING)
@@ -257,7 +267,7 @@ def build():
 def release():
     """Build and Zip."""
     # 1. Build
-    build()
+    build(build_type="Release")
     
     # 2. Get Version
     try:

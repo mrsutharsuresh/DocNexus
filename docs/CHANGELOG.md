@@ -13,6 +13,14 @@ All notable changes to this project will be documented in this file.
 - **Mermaid Logic**: Fixed syntax errors in architectural diagrams (subgraph IDs, HTML entities) that prevented rendering.
 - **Renderer Config**: Configured `pymdownx.superfences` to correctly output `<div class="mermaid">` for frontend detection.
 
+### Refactor
+- **Project Structure**: Moved specific `examples` folder to `docs/examples` for better organization.
+- **Build Artifacts**: Removed legacy `dist` folder. Implemented unified `releases/archive` and `releases/latest` logic for better version management.
+
+### DevOps
+- **Build Metadata**: Added automatic injection of Build Timestamp (`YYYY-MM-DD HH:MM:SS`) and Build Type (`Dev`/`Release`) into the executable.
+- **CLI**: Updated `--version` output to display build metadata.
+
 ### Limitations
 - **Export**: Documented successful PDF/Word export limitations regarding dynamic diagrams (JS content) in `Todo`.
 
