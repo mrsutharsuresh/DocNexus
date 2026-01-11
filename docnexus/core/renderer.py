@@ -1,6 +1,7 @@
 from typing import List, Callable
 import markdown
 import re
+import pymdownx.superfences
 
 # Baseline/standard rendering: just Markdown -> HTML with extensions
 
@@ -44,7 +45,18 @@ def render_baseline(md_text: str) -> str:
             'pymdownx.tabbed',
             'pymdownx.tasklist',
             'pymdownx.magiclink',
-        ]
+        ],
+        extension_configs={
+            "pymdownx.superfences": {
+                "custom_fences": [
+                    {
+                        'name': 'mermaid',
+                        'class': 'mermaid',
+                        'format': pymdownx.superfences.fence_div_format
+                    }
+                ]
+            }
+        }
     )
     
     html_output = md_instance.convert(md_text)

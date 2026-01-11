@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.2.5] - 2026-01-11
+
+### Added
+- **Mermaid Support**: Added native rendering for Mermaid diagrams (Sequence, Flowchart, Class) in the viewer (`view.html`) and backend logic (`renderer.py`).
+- **User Guide**: Added "Smart Diagrams" section to `USER_GUIDE.md` detailing how to use Mermaid.
+- **Documentation**: Enhanced `DOCNEXUS_ARCHITECTURE.md` with visual block and sequence diagrams.
+
+### Fixed
+- **Mermaid Logic**: Fixed syntax errors in architectural diagrams (subgraph IDs, HTML entities) that prevented rendering.
+- **Renderer Config**: Configured `pymdownx.superfences` to correctly output `<div class="mermaid">` for frontend detection.
+
+### Limitations
+- **Export**: Documented successful PDF/Word export limitations regarding dynamic diagrams (JS content) in `Todo`.
+
 ## [v1.2.4] - 2026-01-10
 ### Fixed
 - **Editor Plugin**: Fixed critical `Feature` signature mismatch that prevented the Editor from loading in the bundled release (added `state` and `feature_type` args).

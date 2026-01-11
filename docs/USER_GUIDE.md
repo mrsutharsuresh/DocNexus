@@ -36,6 +36,11 @@ A professional, enterprise-grade documentation platform with a modern UI, integr
 - **Smart Sequence Diagrams**: Auto-converts text interactions into Mermaid sequence diagrams.
 - **Smart Topology**: Transforms ASCII network diagrams into visual topology graphs.
 - **Smart Tables**: Formats ASCII tables into sortable data grids.
+- **Smart Diagrams (Mermaid)**: Native support for Code definitions to Diagrams.
+  - **Flowcharts**: `graph TD; A-->B;`
+  - **Sequence**: `sequenceDiagram`
+  - **Class**: `classDiagram`
+  - *Usage: simply wrap your mermaid code in a fenced block marked with `mermaid`.*
 
 ### Export Capabilities
 - **Word Export (.docx)**: High-fidelity export including images, tables, and clickable Table of Contents.
