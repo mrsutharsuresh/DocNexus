@@ -21,6 +21,18 @@ All notable changes to this project will be documented in this file.
 - **Build Metadata**: Added automatic injection of Build Timestamp (`YYYY-MM-DD HH:MM:SS`) and Build Type (`Dev`/`Release`) into the executable.
 - **CLI**: Updated `--version` output to display build metadata.
 
+### Improved
+- **PDF Export**:
+    - **Pro TOC**: Replaced web-style box with professional print-style Table of Contents (transparent, bold typography).
+    - **Clean Output**: Stripped web UI elements (Navbar, Sidebar, Buttons) using `#documentContent` targeting.
+    - **Structure**: Repositioned TOC to top of document.
+    - **Fixes**: Fixed internal linking, removed header artifacts (`¶`), and stripped unsupported emojis ("tofu").
+
+### Fixed
+- **Stability**: Fixed `500 Internal Server Error` caused by missing `__len__` in `Pipeline` class.
+- **Editor Plugin**: Fixed syntax typo to prevent import errors.
+- **Logging**: Unified log levels and added better tracing for loader and plugins.
+
 ### Limitations
 - **Export**: Documented successful PDF/Word export limitations regarding dynamic diagrams (JS content) in `Todo`.
 

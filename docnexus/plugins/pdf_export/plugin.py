@@ -18,6 +18,8 @@ def export_pdf(content_html: str) -> bytes:
     
     try:
         from xhtml2pdf import pisa
+        from bs4 import BeautifulSoup
+        import re
         # Prepare content with robust CSS handling
         # xhtml2pdf crashes on CSS variables (var(--...)).
         # We must:
@@ -44,6 +46,72 @@ def export_pdf(content_html: str) -> bytes:
             
             # Nuke remaining vars to generic gray to prevent crash
             return css_var_pattern.sub('#888888', text)
+
+        # 0. Clean & Restructure HTML using BeautifulSoup
+        try:
+            soup = BeautifulSoup(content_html, 'html.parser')
+
+            # Identify Key Content Areas
+            # Target the Main Document Container (includes Title, Metadata, Server-Side TOC, Content)
+            # This respects the "On-Page" structure the user sees, excluding Navbar/Sidebar.
+            main_container = soup.find(id='documentContent')
+            
+            if not main_container:
+                # Fallback for pages that might not have the ID
+                main_container = soup.find(class_='markdown-content')
+            
+            if main_container:
+                # 1. Remove Header Permalinks (Double Square Artifacts)
+                # These are usually <a class="headerlink">¶</a>
+                for permalink in main_container.find_all('a', class_='headerlink'):
+                    permalink.decompose()
+
+                # 2. Fix Internal Links (TOC & Anchors)
+                # xhtml2pdf often needs <a name="id"></a> for internal linking to work reliably.
+                # Find all elements with an ID and inject a named anchor.
+                for element in main_container.find_all(id=True):
+                    anchor_name = element['id']
+                    # Create a new anchor tag
+                    new_anchor = soup.new_tag('a')
+                    new_anchor['name'] = anchor_name
+                    # Insert *inside* the element at the beginning, or before it.
+                    # Putting it inside is usually safer for keeping context.
+                    element.insert(0, new_anchor)
+
+                # 3. Handle Emojis (Square Artifacts)
+                # Strip wide unicode characters (likely emojis) that xhtml2pdf default fonts can't render.
+                # This prevents the "tofu" boxes.
+                def remove_emojis(text):
+                    if not text: return text
+                    # Regex to match emojis / symbols outside basic multilingual plane
+                    return re.sub(r'[^\x00-\x7F\x80-\xFF\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]', '', text)
+
+                # Recursively clean text nodes
+                for text_node in main_container.find_all(string=True):
+                    if text_node.parent.name not in ['script', 'style']: # formatting tags are fine
+                        cleaned_text = remove_emojis(text_node)
+                        if cleaned_text != text_node:
+                            text_node.replace_with(cleaned_text)
+
+                # Create a fresh clean DOM
+                new_soup = BeautifulSoup('<html><body></body></html>', 'html.parser')
+                body = new_soup.body
+                
+                # Append the main container
+                body.append(main_container)
+                
+                # Remove any screen-only elements that might be inside
+                for garbage in body.find_all(['script', 'button', 'nav']): 
+                    garbage.decompose()
+
+                # Update content to be just this clean structure
+                content_html = str(new_soup)
+            else:
+                 logger.warning("PDFExport: Could not find #documentContent or .markdown-content")
+
+        except Exception as e:
+            logger.error(f"PDFExport: preprocessing failed: {e}")
+            pass
 
         # "SAFE MODE": Strip all external stylesheets to prevent xhtml2pdf crash on modern CSS
         # We replace them with a robust internal stylesheet optimized for print.
@@ -86,10 +154,56 @@ def export_pdf(content_html: str) -> bytes:
                 /* Force simplified styling for PDF */
                 .markdown-body {{ font-family: Helvetica, Arial, sans-serif !important; color: black !important; background: white !important; }}
                 h1, h2, h3, h4, h5, h6 {{ color: #333 !important; page-break-after: avoid; }}
-                h1 {{ border-bottom: 2px solid #333; }}
+                h1 {{ border-bottom: 2px solid #333; padding-bottom: 5px; }}
                 code, pre {{ font-family: Courier; background: #f5f5f5; border: 1px solid #eee; }}
-                table {{ border-collapse: collapse; width: 100%; }}
-                td, th {{ border: 1px solid #ccc; padding: 4px; }}
+                table {{ border-collapse: collapse; width: 100%; margin-top: 10px; }}
+                td, th {{ border: 1px solid #ccc; padding: 6px; text-align: left; }}
+                th {{ background-color: #f3f4f6; font-weight: bold; }}
+
+                /* Document Header Styling (Title & Metadata) */
+                .document-header {{ margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px; }}
+                .document-title {{ font-size: 24pt; font-weight: bold; margin: 0 0 10px 0; border: none !important; }}
+                .document-path {{ color: #666; font-size: 9pt; font-style: italic; }}
+
+                /* TOC Styling (Professional Print) */
+                .toc-container {{
+                    background-color: transparent;
+                    border: none;
+                    padding: 0;
+                    margin-bottom: 40px;
+                }}
+                .toc-header {{
+                    font-size: 14pt;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                    margin-bottom: 20px;
+                    border-bottom: 3px solid #000;
+                    padding-bottom: 10px;
+                    color: #000;
+                }}
+                .toc-content ul {{ list-style-type: none; padding-left: 0; }}
+                .toc-content li {{ margin-bottom: 8px; }}
+                
+                /* Top Level Items */
+                .toc-content > ul > li > a {{
+                    font-weight: bold;
+                    font-size: 11pt;
+                    color: #000;
+                }}
+                
+                /* Nested Items */
+                .toc-content ul ul {{ 
+                    padding-left: 20px; 
+                    margin-top: 4px;
+                }}
+                .toc-content ul ul li a {{
+                    font-weight: normal;
+                    font-size: 10pt;
+                    color: #444;
+                }}
+                
+                .toc-content a {{ text-decoration: none; }}
             </style>
         </head>
         <body>
