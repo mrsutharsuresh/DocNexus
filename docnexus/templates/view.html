@@ -25,12 +25,90 @@
     <!-- Mermaid -->
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script>
-        mermaid.initialize({
-            startOnLoad: true,
-            theme: 'default',
+        // Dynamic Mermaid Configuration
+        const mermaidConfig = {
+            startOnLoad: false, // We control rendering
             flowchart: { htmlLabels: false },
             securityLevel: 'loose',
-            fontFamily: 'arial, sans-serif'
+            fontFamily: 'Inter, sans-serif',
+        };
+
+        async function renderMermaid() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const theme = isDark ? 'dark' : 'default';
+
+            // High Contrast Overrides
+            const themeVariables = isDark ? {
+                // Dark Mode Contrast
+                primaryColor: '#1e293b',    // Slate 800
+                primaryTextColor: '#f8fafc', // Slate 50 (High Contrast)
+                primaryBorderColor: '#94a3b8', // Slate 400
+                lineColor: '#cbd5e1',       // Slate 300
+                secondaryColor: '#334155',  // Slate 700
+                tertiaryColor: '#1e293b',   // Slate 800
+                mainBkg: '#1e293b',         // Background for nodes
+                nodeBorder: '#94a3b8',      // Border color
+            } : {
+                // Light Mode Contrast
+                primaryColor: '#ffffff',     // White
+                primaryTextColor: '#0f172a', // Slate 900 (High Contrast)
+                primaryBorderColor: '#334155', // Slate 700
+                lineColor: '#334155',        // Slate 700
+                secondaryColor: '#f1f5f9',   // Slate 100
+                tertiaryColor: '#ffffff',    // White
+                mainBkg: '#ffffff',
+                nodeBorder: '#334155',
+            };
+
+            // Re-initialize with new theme and variables
+            mermaid.initialize({
+                ...mermaidConfig,
+                theme: theme,
+                themeVariables: themeVariables
+            });
+
+            // Process all .mermaid divs
+            const nodes = document.querySelectorAll('.mermaid');
+
+            for (const node of nodes) {
+                // 1. Capture Source (First Run Only)
+                if (!node.getAttribute('data-source')) {
+                    node.setAttribute('data-source', node.textContent);
+                }
+
+                // 2. Restore Source (Wipe previous SVG)
+                const source = node.getAttribute('data-source');
+                node.removeAttribute('data-processed'); // Reset for Mermaid
+                node.innerHTML = source; // Restore raw text
+            }
+
+            // 3. Render Async
+            try {
+                await mermaid.run({
+                    nodes: nodes
+                });
+            } catch (e) {
+                console.error("Mermaid Render Error:", e);
+            }
+        }
+
+        // Init on Load
+        document.addEventListener('DOMContentLoaded', () => {
+            renderMermaid();
+
+            // Watch for Theme Changes
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                        renderMermaid();
+                    }
+                });
+            });
+
+            observer.observe(document.documentElement, {
+                attributes: true,
+                attributeFilter: ['data-theme']
+            });
         });
     </script>
 

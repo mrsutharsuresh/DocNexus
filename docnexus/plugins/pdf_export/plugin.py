@@ -160,8 +160,21 @@ def export_pdf(content_html: str) -> bytes:
                 }}
                 /* Force simplified styling for PDF */
                 .markdown-body {{ font-family: Helvetica, Arial, sans-serif !important; color: black !important; background: white !important; }}
-                h1, h2, h3, h4, h5, h6 {{ color: #333 !important; page-break-after: avoid; }}
+                
+                /* Smart Page Breaks (Refined) */
+                h1, h2, h3, h4, h5, h6 {{ 
+                    color: #333 !important; 
+                    page-break-after: avoid; /* Keep with next paragraph */
+                }}
+                
+                /* Only strictly keep small visuals together. Allow text/tables to break. */
+                .mermaid, img, figure {{ 
+                    page-break-inside: avoid; 
+                }}
+                
+                /* Removed aggressive h1 page-break-before to prevent blank pages */
                 h1 {{ border-bottom: 2px solid #333; padding-bottom: 5px; }}
+                
                 code, pre {{ font-family: Courier; background: #f5f5f5; border: 1px solid #eee; }}
                 table {{ border-collapse: collapse; width: 100%; margin-top: 10px; }}
                 td, th {{ border: 1px solid #ccc; padding: 6px; text-align: left; }}

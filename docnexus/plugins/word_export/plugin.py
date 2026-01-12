@@ -351,6 +351,22 @@ def export_to_word(html_content: str) -> bytes:
                 run.add_break(WD_BREAK.PAGE)
                 # Ensure no weird spacing/styles on this empty line
                 p.style = doc.styles['Normal']
+                continue
+
+            # Smart Page Breaks (Keep with Next & Keep Together)
+            # 1. Headings: Always keep with next paragraph
+            if p.style.name.startswith('Heading'):
+                p.paragraph_format.keep_with_next = True
+            
+            # 2. Code Blocks / Quotes: Try to keep them together on one page
+            # htmldocx maps <pre> to 'No Spacing' or paragraphs with specific fonts usually?
+            # It's inconsistent, but we can try to detect if it LOOKS like code (Courier New, Consolas, or shaded background)
+            # A safer generic heuristic: If it has a border or shading (which we applied to tables/code earlier?), keep it together.
+            # But paragraphs don't easily expose borders in python-docx API without diving into XML.
+            
+            # Simple fallback: If style involves 'Code', 'Quote', 'Intense Quote'
+            if any(s in p.style.name for s in ['Code', 'Quote', 'Macro']):
+                p.paragraph_format.keep_together = True
 
         # Post-processing (Image Sizing & Centering)
         # Fixes oversized diagrams in Word export

@@ -55,6 +55,14 @@ removed header artifacts (`¶`), and stripped unsupported emojis ("tofu").
 - **Editor Plugin**: Fixed syntax typo to prevent import errors.
 - **Logging**: Unified log levels and added better tracing for loader and plugins.
 
+### Refinement
+- **Smart Page Breaks**:
+    - **PDF**: Relaxed pagination rules (`page-break-before` on H1 removed) to prevent blank pages while maintaining "Keep-with-Next" logic for headings.
+    - **Word**: Implemented robust "Keep-with-Next" for headings and "Keep-Together" for code blocks via post-processing to ensure professional document flow.
+- **Dynamic Diagrams**:
+    - **Theme-Aware**: Mermaid diagrams now listen to application theme changes and instantly re-render in the correct color scheme (Light/Dark).
+    - **Accessibility**: Enforced high-contrast colors (Slate 50 on Slate 800 for Dark Mode; Slate 900 on White for Light Mode) to ensure diagram readability.
+
 ### Limitations
 - **Export**: Documented successful PDF/Word export limitations regarding dynamic diagrams (JS content) in `Todo`.
 
