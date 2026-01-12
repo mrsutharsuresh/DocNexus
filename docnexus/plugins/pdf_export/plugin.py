@@ -178,6 +178,7 @@ def export_pdf(content_html: str) -> bytes:
                     border: none;
                     padding: 0;
                     margin-bottom: 40px;
+                    page-break-after: always;
                 }}
                 .toc-header {{
                     font-size: 14pt;

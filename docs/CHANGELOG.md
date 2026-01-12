@@ -17,6 +17,8 @@ All notable changes to this project will be documented in this file.
 - **Mermaid Export Visibility**: Fixed critical issue where text in Block and Class diagrams was invisible in PDF exports due to `foreignObject` limitations in `canvg`. Implemented a dynamic "ForeignObject Shim" to convert these into native SVG text.
 - **Smart Text Alignment**: Implemented intelligent alignment logic that correctly centers Block Diagram labels while left-aligning Class Diagram attribute lists.
 - **Text Clarity**: Enforced `stroke: none` and high-contrast overrides to ensure clean, readable text in generated diagrams.
+- **Word Export Refined**: Fixed transparency issues (invisible diagrams) by flattening specific images onto a white background. Implemented intelligent width/height constraints to ensure diagrams never overflow the page.
+- **Stability**: Fixed indentation error in Word export plugin.
 
 ### Refactor
 - **Project Structure**: Moved specific `examples` folder to `docs/examples` for better organization.

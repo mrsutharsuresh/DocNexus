@@ -86,6 +86,12 @@ def export_to_word(html_content: str) -> bytes:
             
             selected_content.append(toc)
             
+            # Robust Page Break: Inject a unique marker we can find and replace with a REAL Word Break later
+            # CSS page-break-after is unreliable in htmldocx
+            pb_marker = soup.new_tag('p')
+            pb_marker.string = "<<<DOCNEXUS_PAGE_BREAK>>>"
+            selected_content.append(pb_marker)
+            
         # Extract Markdown Content
         md_content = container.find(class_='markdown-content')
         if md_content:
@@ -331,6 +337,20 @@ def export_to_word(html_content: str) -> bytes:
         for paragraph in doc.paragraphs:
             if paragraph.style.name.startswith('Heading') and paragraph.text.strip() in heading_ids:
                 add_bookmark(paragraph, heading_ids[paragraph.text.strip()])
+
+        # Post-processing (Hard Page Break Injection)
+        # Search for our unique marker and replace with a native WD_BREAK_PAGE
+        from docx.enum.text import WD_BREAK
+        
+        for i, p in enumerate(doc.paragraphs):
+            if "<<<DOCNEXUS_PAGE_BREAK>>>" in p.text:
+                # Clear the marker text
+                p.clear()
+                # Insert the Page Break
+                run = p.add_run()
+                run.add_break(WD_BREAK.PAGE)
+                # Ensure no weird spacing/styles on this empty line
+                p.style = doc.styles['Normal']
 
         # Post-processing (Image Sizing & Centering)
         # Fixes oversized diagrams in Word export
