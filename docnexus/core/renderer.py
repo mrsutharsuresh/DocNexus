@@ -160,6 +160,9 @@ def render_baseline(md_text: str) -> str:
             EnhancedWikiLinkExtension(base_url='/file/', end_url='') # Custom Extension Instance
         ],
         extension_configs={
+            "pymdownx.arithmatex": {
+                "generic": True,
+            },
             "pymdownx.superfences": {
                 "custom_fences": [
                     {

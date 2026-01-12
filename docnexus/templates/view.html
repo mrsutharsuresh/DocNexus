@@ -22,6 +22,11 @@
     <!-- Code Highlight Theme (Server-Side) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='pygments.css') }}">
 
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
     <!-- Mermaid -->
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script>
@@ -94,6 +99,17 @@
 
         // Init on Load
         document.addEventListener('DOMContentLoaded', () => {
+            // KaTeX Math Rendering
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false },
+                    { left: '\\(', right: '\\)', display: false },
+                    { left: '\\[', right: '\\]', display: true }
+                ],
+                throwOnError: false
+            });
+
             renderMermaid();
 
             // Watch for Theme Changes
