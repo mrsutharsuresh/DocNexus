@@ -1478,6 +1478,13 @@
                             // 3. Inject
                             const imgTag = document.createElement('img');
                             imgTag.src = dataUrl;
+
+                            // CRITICAL for Word Export: Set EXPLICIT width/height attributes.
+                            // htmldocx/Word often ignores CSS '100%', causing the High-DPI image to look GIGANTIC.
+                            // We set the logical width (original SVG width) to force scaling down.
+                            imgTag.setAttribute('width', Math.round(rect.width));
+                            imgTag.setAttribute('height', Math.round(rect.height));
+
                             imgTag.style.maxWidth = '100%';
                             imgTag.style.height = 'auto';
                             imgTag.style.display = 'block';

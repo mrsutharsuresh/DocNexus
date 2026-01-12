@@ -179,31 +179,57 @@ def export_to_word(html_content: str) -> bytes:
                     new_src = str(local_path)
                     
                 elif src.startswith('data:image/'):
-                     # Handle Data URIs (e.g. Mermaid Exports)
-                     import base64
-                     
-                     if ';base64,' in src:
-                         header, data = src.split(';base64,')
-                         ctype = header.split(':')[1]
-                         
-                         if 'svg' in ctype:
-                              raise ValueError("SVG data URIs are not supported.")
-                         
-                         ext = '.png'
-                         if 'jpeg' in ctype or 'jpg' in ctype:
-                             ext = '.jpg'
-                         
-                         # Save to temp file
-                         img_data = base64.b64decode(data)
-                         filename = f"embedded_image_{hash(data)}{ext}"
-                         local_path = temp_dir_path / filename
-                         
-                         with open(local_path, 'wb') as f:
-                             f.write(img_data)
-                             
-                         new_src = str(local_path)
-                     else:
-                         raise ValueError("Unsupported Data URI format")
+                    # Handle Data URIs (e.g. Mermaid Exports)
+                    import base64
+                    try:
+                        from PIL import Image
+                    except ImportError:
+                        Image = None
+                    
+                    if ';base64,' in src:
+                        header, data = src.split(';base64,')
+                        ctype = header.split(':')[1]
+                        
+                        if 'svg' in ctype:
+                             raise ValueError("SVG data URIs are not supported.")
+                        
+                        img_data = base64.b64decode(data)
+                        
+                        # Process Image (Flatten Transparency)
+                        if Image:
+                            try:
+                                with Image.open(io.BytesIO(img_data)) as im:
+                                   # Convert to RGBA if strictly RGB to ensure consistent handling (though usually PNG is RGBA)
+                                   if im.mode in ('RGBA', 'LA') or (im.mode == 'P' and 'transparency' in im.info):
+                                       # Create white background
+                                       bg = Image.new('RGB', im.size, (255, 255, 255))
+                                       # Paste image on top using alpha channel
+                                       if im.mode != 'RGBA':
+                                           im = im.convert('RGBA')
+                                       bg.paste(im, mask=im.split()[3]) # 3 is the alpha channel
+                                       
+                                       # Save flattened image
+                                       output = io.BytesIO()
+                                       bg.save(output, format='PNG')
+                                       img_data = output.getvalue()
+                                       ext = '.png'
+                                   else:
+                                        ext = '.png' if 'png' in ctype else '.jpg'
+                            except Exception as iconv_err:
+                                logger.warning(f"PIL Conversion failed, using original data: {iconv_err}")
+                                ext = '.png' if 'png' in ctype else '.jpg'
+                        else:
+                            ext = '.png' if 'png' in ctype else '.jpg'
+
+                        filename = f"embedded_image_{hash(data)}{ext}"
+                        local_path = temp_dir_path / filename
+                        
+                        with open(local_path, 'wb') as f:
+                            f.write(img_data)
+                            
+                        new_src = str(local_path)
+                    else:
+                        raise ValueError("Unsupported Data URI format")
 
                 elif not src.startswith('data:'):
                      # Resolve local path
@@ -305,6 +331,56 @@ def export_to_word(html_content: str) -> bytes:
         for paragraph in doc.paragraphs:
             if paragraph.style.name.startswith('Heading') and paragraph.text.strip() in heading_ids:
                 add_bookmark(paragraph, heading_ids[paragraph.text.strip()])
+
+        # Post-processing (Image Sizing & Centering)
+        # Fixes oversized diagrams in Word export
+        try:
+            # Calculate writable limits
+            section = doc.sections[0]
+            page_width = section.page_width
+            page_height = section.page_height
+            margin_x = section.left_margin + section.right_margin
+            margin_y = section.top_margin + section.bottom_margin
+            
+            writable_width = page_width - margin_x
+            writable_height = page_height - margin_y
+            
+            from docx.shared import Emu
+
+            for shape in doc.inline_shapes:
+                # Calculate aspect ratio
+                if shape.width == 0: continue
+                aspect_ratio = shape.height / shape.width
+                
+                # 1. Width Constraint
+                if shape.width > writable_width:
+                    shape.width = writable_width
+                    shape.height = int(writable_width * aspect_ratio)
+                
+                # 2. Height Constraint (Applied after width to ensure final fit)
+                if shape.height > writable_height:
+                    shape.height = writable_height
+                    shape.width = int(writable_height / aspect_ratio)
+                
+                # Force Center Alignment for paragraphs containing images
+                # This works because htmldocx usually puts block images in their own p (or we forced it)
+                # We check if the paragraph is mostly just this image to avoid centering mixed content
+                # For now, simplistic approach: if paragraph has an inline shape, center it.
+                # Accessing the parent paragraph of a shape isn't direct in python-docx public API,
+                # but we can try iterating paragraphs and finding runs with drawings.
+                pass 
+            
+            # Robust Centering Loop
+            # Iterate paragraphs, find those with images, force center
+            for p in doc.paragraphs:
+                # Check for blip/drawing
+                if 'Graphic' in p._element.xml or 'drawing' in p._element.xml:
+                    # Heuristic: mostly image content?
+                    if len(p.text.strip()) < 5:  # Almost no text, valid assumption for a diagram block
+                        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                        
+        except Exception as e:
+            logger.warning(f"Failed to resize images: {e}")
 
         # Post-processing (Style Table Grid)
         for table in doc.tables:
