@@ -13,6 +13,11 @@ All notable changes to this project will be documented in this file.
 - **Mermaid Logic**: Fixed syntax errors in architectural diagrams (subgraph IDs, HTML entities) that prevented rendering.
 - **Renderer Config**: Configured `pymdownx.superfences` to correctly output `<div class="mermaid">` for frontend detection.
 
+### Fixed (Hotfix)
+- **Mermaid Export Visibility**: Fixed critical issue where text in Block and Class diagrams was invisible in PDF exports due to `foreignObject` limitations in `canvg`. Implemented a dynamic "ForeignObject Shim" to convert these into native SVG text.
+- **Smart Text Alignment**: Implemented intelligent alignment logic that correctly centers Block Diagram labels while left-aligning Class Diagram attribute lists.
+- **Text Clarity**: Enforced `stroke: none` and high-contrast overrides to ensure clean, readable text in generated diagrams.
+
 ### Refactor
 - **Project Structure**: Moved specific `examples` folder to `docs/examples` for better organization.
 - **Build Artifacts**: Removed legacy `dist` folder. Implemented unified `releases/archive` and `releases/latest` logic for better version management.
@@ -20,13 +25,21 @@ All notable changes to this project will be documented in this file.
 ### DevOps
 - **Build Metadata**: Added automatic injection of Build Timestamp (`YYYY-MM-DD HH:MM:SS`) and Build Type (`Dev`/`Release`) into the executable.
 - **CLI**: Updated `--version` output to display build metadata.
+- **Public Access**: Configured ALL builds (Dev & Release) to bind to `0.0.0.0` by default, enabling seamless access via Localhost AND Public/Global IP.
 
 ### Improved
 - **PDF Export**:
+    - **Mermaid Support**: Added "True WYSIWYG" Mermaid export. The browser now captures high-resolution snapshots of rendered diagrams (clientside) and embeds them into the PDF, ensuring 100% offline reliability and exact visual fidelity.
     - **Pro TOC**: Replaced web-style box with professional print-style Table of Contents (transparent, bold typography).
     - **Clean Output**: Stripped web UI elements (Navbar, Sidebar, Buttons) using `#documentContent` targeting.
-    - **Structure**: Repositioned TOC to top of document.
-    - **Fixes**: Fixed internal linking, removed header artifacts (`¶`), and stripped unsupported emojis ("tofu").
+    - **Flowcharts**:
+    ```plaintext
+    graph TD;
+      A[Start] --> B{Is it?};
+      B -- Yes --> C[OK];
+      B -- No --> D[Debug];
+    ```
+removed header artifacts (`¶`), and stripped unsupported emojis ("tofu").
 - **Sidebar**:
     - **Flash Fix**: Eliminated "Flash of Unstyled Content" (FOUC) by applying TOC position preferences immediately before render.
     - **Availability**: Sidebar is now available for all file types (including text files).

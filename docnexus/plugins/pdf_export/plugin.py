@@ -93,6 +93,13 @@ def export_pdf(content_html: str) -> bytes:
                         if cleaned_text != text_node:
                             text_node.replace_with(cleaned_text)
 
+                # 4. Handle Mermaid Diagrams
+                # Handled Client-Side: The frontend now rasterizes SVG -> PNG Data URI before sending HTML.
+                # This ensures WYSIWYG results and offline support. 
+                # We just leave this here as a placeholder in case any un-processed blocks remain (rendered as text).
+                pass
+
+
                 # Create a fresh clean DOM
                 new_soup = BeautifulSoup('<html><body></body></html>', 'html.parser')
                 body = new_soup.body

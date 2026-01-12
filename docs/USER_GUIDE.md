@@ -38,20 +38,21 @@ A professional, enterprise-grade documentation platform with a modern UI, integr
 - **Smart Tables**: Formats ASCII tables into sortable data grids.
 - **Smart Diagrams (Mermaid)**: Native support for Code definitions to Diagrams.
   - **Flowcharts**:
-    ```mermaid
+    ```plaintext
     graph TD;
       A[Start] --> B{Is it?};
       B -- Yes --> C[OK];
       B -- No --> D[Debug];
     ```
+
   - **Sequence**:
-    ```mermaid
+    ```plaintext
     sequenceDiagram
       Alice->>John: Hello!
       John-->>Alice: Hi!
     ```
   - **Class**:
-    ```mermaid
+    ```plaintext
     classDiagram
       Animal <|-- Duck
     ```

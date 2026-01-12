@@ -25,7 +25,8 @@ def start_server(args):
     """Start the Flask server."""
     from docnexus.app import app
     
-    host = args.host or 'localhost'
+    
+    host = args.host
     port = args.port or 8000
     debug = args.debug
     
@@ -58,12 +59,16 @@ Examples:
         help='Show version information'
     )
     
+    # Determine default host based on build type
+    # Always default to 0.0.0.0 to support both Localhost and Public IP access
+    default_host = '0.0.0.0'
+    
     # Global server arguments
     parser.add_argument(
         '--host',
         type=str,
-        default='localhost',
-        help='Host to bind to (default: localhost)'
+        default=default_host,
+        help=f'Host to bind to (default: {default_host})'
     )
     parser.add_argument(
         '--port', '-p',

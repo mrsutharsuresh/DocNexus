@@ -178,8 +178,32 @@ def export_to_word(html_content: str) -> bytes:
                     
                     new_src = str(local_path)
                     
-                elif src.startswith('data:image/svg'):
-                     raise ValueError("SVG data URIs are not supported.")
+                elif src.startswith('data:image/'):
+                     # Handle Data URIs (e.g. Mermaid Exports)
+                     import base64
+                     
+                     if ';base64,' in src:
+                         header, data = src.split(';base64,')
+                         ctype = header.split(':')[1]
+                         
+                         if 'svg' in ctype:
+                              raise ValueError("SVG data URIs are not supported.")
+                         
+                         ext = '.png'
+                         if 'jpeg' in ctype or 'jpg' in ctype:
+                             ext = '.jpg'
+                         
+                         # Save to temp file
+                         img_data = base64.b64decode(data)
+                         filename = f"embedded_image_{hash(data)}{ext}"
+                         local_path = temp_dir_path / filename
+                         
+                         with open(local_path, 'wb') as f:
+                             f.write(img_data)
+                             
+                         new_src = str(local_path)
+                     else:
+                         raise ValueError("Unsupported Data URI format")
 
                 elif not src.startswith('data:'):
                      # Resolve local path
@@ -210,6 +234,45 @@ def export_to_word(html_content: str) -> bytes:
                 replacement.string = f"[{alt_text}]"
                 replacement['style'] = "color: #666; font-style: italic; border: 1px solid #ccc; padding: 2px;"
                 img.replace_with(replacement)
+
+        # Sanitize Styles to prevent htmldocx crashes (invalid literal for int() with base 16)
+        # htmldocx chokes on 'stroke: none', 'fill: ...', and 'color: auto/none' often found in Mermaid/Shims
+        for tag in soup.find_all(True):
+            if tag.has_attr('style'):
+                styles = [s.strip() for s in tag['style'].split(';') if s.strip()]
+                clean_styles = []
+                for s in styles:
+                    if ':' in s:
+                        prop, val = s.split(':', 1)
+                        prop = prop.strip().lower()
+                        val = val.strip().lower()
+                        
+                        # Strip dangerous SVG-related styles that htmldocx doesn't understand
+                        if prop in ['stroke', 'stroke-width', 'fill', 'fill-opacity', 'stroke-opacity']:
+                            continue
+                            
+                        # Strip color values that aren't strict hex/rgb (causes base 16 error)
+                        if 'color' in prop: # color, background-color, border-color
+                             if val in ['none', 'auto', 'transparent', 'inherit', 'initial', 'unset']:
+                                 continue
+                             # Try to protect against 'rgba(0,0,0,0)' if htmldocx doesn't support it (it usually doesn't)
+                             if 'rgba' in val:
+                                 continue
+
+                        clean_styles.append(s)
+                
+                if clean_styles:
+                    tag['style'] = "; ".join(clean_styles)
+                else:
+                    del tag['style']
+                    
+        # Also remove 'stroke' and 'fill' attributes directly
+        for tag in soup.find_all(attrs={"stroke": True}):
+            del tag['stroke']
+        for tag in soup.find_all(attrs={"fill": True}):
+            del tag['fill']
+        for tag in soup.find_all(attrs={"viewbox": True}):
+             del tag['viewbox'] # Clean up any lingering SVG debris
 
         clean_html = str(soup)
 

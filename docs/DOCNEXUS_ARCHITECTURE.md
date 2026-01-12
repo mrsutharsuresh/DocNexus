@@ -206,12 +206,19 @@ The user clicks "Export to PDF". The system must locate the correct handler, ens
 ```mermaid
 sequenceDiagram
     participant Client as Browser
-    participant API as /game/export/{fmt}
+    participant API as /view (Export)
     participant FM as FeatureManager
     participant Plugin as Word/PDF Plugin
     participant SafeMode as CSS Sanitizer
 
-    Client->>API: GET /view?export=pdf
+    rect rgb(240, 248, 255)
+        note right of Client: Hybrid Export Strategy
+        Client->>Client: Clone DOM (Shadow Copy)
+        Client->>Client: Rasterize Mermaid/Charts (Canvg)
+        Client->>Client: Inject <img> Visuals into Clone
+    end
+
+    Client->>API: POST /view?export=pdf (payload=html)
     API->>FM: get_export_handler('pdf')
     
     loop Search Feature List
