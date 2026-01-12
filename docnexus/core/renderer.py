@@ -2,6 +2,7 @@ from typing import List, Callable
 import markdown
 import re
 import pymdownx.superfences
+import pymdownx.emoji
 import logging
 
 logger = logging.getLogger(__name__)
@@ -134,13 +135,8 @@ def render_baseline(md_text: str) -> str:
                 ]
             },
             "pymdownx.emoji": {
-                "emoji_index": __import__('pymdownx.emoji').gemoji,
-                "emoji_generator": __import__('pymdownx.emoji').to_png, 
-                # Note: to_png requires internet or local pack. 
-                # Better to use to_alt or to_svg if we want offline safety?
-                # Let's use 'to_svg' is basically standard now or 'to_png' with CDN.
-                # Default is usually fine, but let's check imports.
-                # safely ignoring complex config for now to let defaults handle it.
+                "emoji_index": pymdownx.emoji.gemoji,
+                "emoji_generator": pymdownx.emoji.to_svg,
             } 
         }
     )
