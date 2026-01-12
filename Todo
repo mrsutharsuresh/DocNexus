@@ -7,20 +7,20 @@ Workspace does not show the subfolder inside if any. - done
 The styling of table of content needs to be improved. - done
 The plugin feature for different features support needs to be added.  - Done
 Why the side bar not available in txt file. - Done
-The left to right shuffle of side bar can be done using a arrow.
+The left to right shuffle of side bar can be done using a arrow. - Done (Shuffle Button)
 Check the backup files seen after editing. The reason, retention and issues. - Done
 Make release work with localhost as well as global/public ip. - Done
 
-Update the view for mobile. Optimisation should be proper.
+Update the view for mobile. Optimisation should be proper. - Done (Responsive Margins)
 
 -> Word And PDF plugins are developed. But various other default plugins needs to be added like themes, icon pack, sidebar etc.
 -> One RAG based plugin for chatting with doc can be useful.
 Showcase on Github
             
-Diagram Export Support (v1.2.4 Limitation):
--> Mermaid diagrams appear as raw code in PDF/DOCX export because export engines don't run JS.
--> TODO: Investigate SSR for Mermaid (headless browser/node wrapper).
--> TODO: Evaluate mermaid-cli for PNG generation during export.
+Diagram Export Support (v1.2.6 Resolved): - Done
+-> PDF: Mermaid diagrams are now rasterized client-side and embedded as high-res images (WYSIWYG).
+-> DOCX: Mermaid diagrams are also captured and embedded, with smart sizing and transparency fixes.
+-> TODO: Evaluate mermaid-cli for server-side generation (optional optimization).
 -> TODO: Implement "Export Pre-processor" hook to substitute JS-widgets with static images.
 
 Missing Diagram Capabilities (GitHub Parity):

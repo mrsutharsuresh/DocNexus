@@ -10,24 +10,24 @@ The application consists of three primary functional blocks: the **Input Process
 
 ```mermaid
 graph LR
-    subgraph InputSources ["Block 1: Input Sources"]
-        FS[Filesystem<br/>(.md Files)]
-        Remote[Remote Sources<br/>(Future: S3/Git)]
-        User[User Input<br/>(Editor/Settings)]
+    subgraph "Block 1: Input Sources"
+        FS["Filesystem<br/>(.md Files)"]
+        Remote["Remote Sources<br/>(Future: S3/Git)"]
+        User["User Input<br/>(Editor/Settings)"]
     end
 
-    subgraph CoreKernel ["Block 2: Core Kernel"]
-        Router[Flask Router<br/>(API/Views)]
-        Loader[Module Loader<br/>(Discovery)]
-        Registry[Feature Registry<br/>(Database)]
-        Manager[Feature Facade<br/>(Logic)]
-        Pipeline[Render Pipeline<br/>(Execution Chain)]
+    subgraph "Block 2: Core Kernel"
+        Router["Flask Router<br/>(API/Views)"]
+        Loader["Module Loader<br/>(Discovery)"]
+        Registry["Feature Registry<br/>(Database)"]
+        Manager["Feature Facade<br/>(Logic)"]
+        Pipeline["Render Pipeline<br/>(Execution Chain)"]
     end
 
-    subgraph OutputEngines ["Block 3: Output Engines"]
-        HTML[Web Engine<br/>(Jinja2 + Theme)]
-        PDF[PDF Engine<br/>(xhtml2pdf)]
-        DOCX[Word Engine<br/>(python-docx)]
+    subgraph "Block 3: Output Engines"
+        HTML["Web Engine<br/>(Jinja2 + Theme)"]
+        PDF["PDF Engine<br/>(xhtml2pdf)"]
+        DOCX["Word Engine<br/>(python-docx)"]
     end
 
     FS --> Router
@@ -206,12 +206,19 @@ The user clicks "Export to PDF". The system must locate the correct handler, ens
 ```mermaid
 sequenceDiagram
     participant Client as Browser
-    participant API as /game/export/{fmt}
+    participant API as /view (Export)
     participant FM as FeatureManager
     participant Plugin as Word/PDF Plugin
     participant SafeMode as CSS Sanitizer
 
-    Client->>API: GET /view?export=pdf
+    rect rgb(240, 248, 255)
+        note right of Client: Hybrid Export Strategy
+        Client->>Client: Clone DOM (Shadow Copy)
+        Client->>Client: Rasterize Mermaid/Charts (Canvg)
+        Client->>Client: Inject <img> Visuals into Clone
+    end
+
+    Client->>API: POST /view?export=pdf (payload=html)
     API->>FM: get_export_handler('pdf')
     
     loop Search Feature List
