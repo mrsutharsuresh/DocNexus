@@ -47,18 +47,78 @@ def transform_html_for_pdf(soup: BeautifulSoup):
                 element.insert(0, new_anchor)
 
         # Fix WikiLinks / Internal Hrefs
+        # Strategy:
+        # 1. If it links to an ID present in the doc (TOC), use it.
+        # 2. If it links to another file, `xhtml2pdf` cannot natively handle it unless we make it an absolute URL or merge docs.
+        #    For now, we render it as an absolute URL if 'base_url' suggests it, or keep it as text to avoid broken links.
+        #    But User explicitly complained it's "not clickable". 
+        #    We will try to preserve it as a link if it looks like a URL path, or convert to a visual span if simpler.
+        
+        # Collect all valid anchor names in the doc for validation
+        existing_anchors = set()
+        for tag in soup.find_all(attrs={'name': True}):
+            existing_anchors.add(tag['name'])
+        for tag in soup.find_all(id=True):
+            existing_anchors.add(tag['id'])
+
         for link in soup.find_all('a', href=True):
             href = link['href']
-            # If it's a relative link (no http/https) and looks like a file/slug
-            if not href.startswith(('http:', 'https:', 'mailto:', '#', 'data:')):
-                # Convert to internal anchor reference
-                # Example: "feature_test_v1.2.6" -> "#feature_test_v1.2.6"
-                # But ID matching is tricky. Simple slugify might be needed or assuming loose match.
-                # Use a safe heuristic: if it doesn't look like a filename with extension (unless .md), treat as TOC target
-                if not '.' in href or href.endswith('.md'):
-                    target_id = href.replace('.md', '').replace('.', '').replace(' ', '-')
-                    link['href'] = f"#{target_id}"
-                    link.attrs['pdf-converted-link'] = "true"
+            
+            # Skip existing valid protocols
+            if href.startswith(('http:', 'https:', 'mailto:', 'data:', 'ftp:')):
+                continue
+                
+            # Internal Hash Links
+            if href.startswith('#'):
+                # Valid internal link, keep it.
+                continue
+            
+            # Application Links (WikiLinks usually come out as relative or /file/...)
+            # If it matches an internal anchor (slug), link it.
+            slug = href.strip('/').replace('.md', '').replace('file/', '')
+            
+            if slug in existing_anchors:
+                link['href'] = f"#{slug}"
+                continue
+            
+            # If it's a file link that doesn't exist as an anchor, we can't link to it in a solitary PDF.
+            # We will convert it to an absolute link assuming localhost for now (or just text).
+            # But making it "clickable" implies it should go SOMEWHERE.
+            # Let's try to assume relative path is valid for PDF viewer if file exists? 
+            # No, `xhtml2pdf` is converting HTML to PDF. File links are relative to CWD.
+            # Best effort: Convert to Styled Text to indicate it's a reference but not broken.
+            # OR, if User insists, we can make it a dead link style.
+            # User expectation: "not have clickable link".
+            # I will ensure it has `color: blue` and `text-decoration: underline` explicitly via style,
+            # AND I will prepend `http://localhost:5000/` (or similar) to make it opening the web view?
+            # Safe approach: text-decoration.
+            
+            # Check if it looks like a WikiLink
+            if 'wikilink' in (link.get('class') or []) or not '.' in href:
+                 # Force styling for visibility
+                 link['style'] = f"color: #0969da; text-decoration: underline; {link.get('style', '')}"
+                 # We simply leave the href alone? No, xhtml2pdf might complain.
+                 # Let's make it a valid external link to a placeholder DB or similar? 
+                 # Actually, let's just leave it if it's not empty, but ensure style is applied.
+                 pass
+
+        # Inject CSS for Emojis and Alerts
+        # Emojis need careful sizing to avoid being "weirdly large" or clipped.
+        # vertical-align: middle usually balances them better than baseline with a negative offset.
+        style_tag = factory_soup.new_tag('style')
+        style_tag.string = """
+            .emoji {
+                font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
+                font-size: 1.0em; /* Reset boost */
+                vertical-align: middle;
+                line-height: 1.5; /* Increase space to prevent clipping */
+                padding: 0 2px;
+            }
+        """
+        if soup.head:
+            soup.head.append(style_tag)
+        else:
+            soup.append(style_tag)
 
         # 3. Transform Tabs (.tabbed-set) -> Vertical Headings + Content
         for tab_set in soup.find_all(class_='tabbed-set'):
@@ -232,28 +292,268 @@ def transform_html_for_pdf(soup: BeautifulSoup):
                 traceback.print_exc()
                 continue
 
-        # 5. Wrap Emojis in <span> for sizing control
-        # Regex for common emoji ranges (Surrogates, Dingbats, Emoticons, Symbols)
+        # 5. Wrap Emojis in <img> tags (Runtime Generation)
+        # xhtml2pdf fails to render Color Emojis from fonts correctly (clipping/sizing).
+        # We use PIL to generate a high-fidelity PNG of the emoji using the system font
+        # and inject it as a Base64 image.
+        
+        from PIL import Image, ImageDraw, ImageFont
+        import base64
+        import io
+        from functools import lru_cache
+        
+        @lru_cache(maxsize=128)
+        def get_emoji_base64(char):
+            try:
+                # Target Windows Emoji font first (most likely env)
+                # If on Linux/Mac, this path won't exist, need fallback
+                font_paths = [
+                    "C:/Windows/Fonts/seguiemj.ttf", # Windows Color Emoji
+                    "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf", # Linux
+                    "/System/Library/Fonts/Apple Color Emoji.ttc", # Mac
+                    "arial.ttf" # Fallback
+                ]
+                
+                font_path = "arial.ttf"
+                for p in font_paths:
+                    if os.path.exists(p):
+                        font_path = p
+                        break
+                
+                # Render large for quality
+                size = 64
+                font = ImageFont.truetype(font_path, size)
+                
+                # Create Image (Transparent)
+                # Add padding to ensure no clipping during render
+                # Emojis are often square-ish.
+                img = Image.new('RGBA', (int(size*1.5), int(size*1.5)), (0, 0, 0, 0))
+                draw = ImageDraw.Draw(img)
+                
+                # Check for Color support (PIL 10+)
+                # embedded_color=True works for fonts with CBDT/CBLC (Google) or SBIX (Apple).
+                # COLR (Windows) support is partial in basic PIL, requires libraqm for complex layout,
+                # but often renders basic shapes. Even B&W is better than broken PDF glyphs.
+                try:
+                    draw.text((size//4, size//4), char, font=font, fill="black", embedded_color=True)
+                except:
+                    draw.text((size//4, size//4), char, font=font, fill="black")
+
+                # Trim empty space to get tight bounding box of the glyph
+                bbox = img.getbbox()
+                if bbox:
+                    img = img.crop(bbox)
+                
+                # Match Alert Icon Strategy: Use larger 64x64 source
+                final_img = Image.new('RGBA', (64, 64), (0, 0, 0, 0))
+                
+                # Resizing logic (Standard Centered)
+                # Table Wrapper strategy solves clipping, so we use natural centered layout.
+                # 50x50 glyph on 64x64 canvas (slight padding).
+                img.thumbnail((50, 50), Image.Resampling.LANCZOS)
+                
+                # Center X, Center Y
+                x = (64 - img.width) // 2
+                y = (64 - img.height) // 2
+                final_img.paste(img, (x, y))
+                
+                # Save to Base64 (PNG RGBA - Matching Alert Icons)
+                # We previously switched to JPEG, but Alerts use PNG.
+                buffer = io.BytesIO()
+                final_img.save(buffer, format='PNG')
+                b64_str = base64.b64encode(buffer.getvalue()).decode('utf-8').replace('\n', '')
+                
+                # Log success
+                print(f"DEBUG: Generated Emoji {char} as 64x64 PNG (AlertMatch).")
+                return "data:image/png;base64," + b64_str
+            except Exception as e:
+                print(f"DEBUG: Failed to render emoji {char}: {e}")
+                import traceback
+                traceback.print_exc()
+                return None
+
+        # Regex for common emoji ranges
         emoji_pattern = re.compile(
             r'[\U00010000-\U0010ffff]'  # SMP (contains most emojis)
             r'|[\u2600-\u27ff]'         # Misc Symbols
             r'|[\u2300-\u23ff]'         # Misc Technical
             r'|[\u2b50]'                # Star
-            r'|[\u203c-\u2049]'         # Punctuation (!!, !?, etc)
+            r'|[\u203c-\u2049]'         # Punctuation
         )
+
+        # Fallback Map for Shortcodes -> Unicode (since 'emoji' lib is not installed)
+        # This allows us to fix images generated by pymdownx.emoji
+        SHORTCODE_MAP = {
+            ':rocket:': '🚀',
+            ':tada:': '🎉',
+            ':snake:': '🐍',
+            ':heart:': '❤️',
+            ':warning:': '⚠️',
+            ':note:': 'ℹ️',
+            ':tip:': '💡',
+            ':important:': '💜',
+            ':caution:': '🛑',
+            ':smile:': '😄',
+            ':thumbsup:': '👍',
+            ':thumbsdown:': '👎',
+            ':check:': '✅',
+            ':x:': '❌'
+        }
         
-        # Traverse text nodes to wrap emojis
+        def emoji_replacer(match):
+            char = match.group(0)
+            b64_src = get_emoji_base64(char)
+            if b64_src:
+                # Use Standard Style (Middle)
+                # With Global Line Height 1.5, trimming should be gone.
+                return f'<b><img src="{b64_src}" alt="emoji" style="width: 14px; height: 14px; vertical-align: middle; margin: 0 1px;" /></b>'
+            return char
+                
+        # 1. Replace Text Emojis
         for text_node in soup.find_all(string=True):
             if text_node.parent.name in ['script', 'style', 'pre', 'code', 'span', 'div'] and 'emoji' in (text_node.parent.get('class') or []):
-                continue
+                 pass # Already processed or effectively wrapped
             
             text = str(text_node)
             if emoji_pattern.search(text):
-                # Replace emoji with span wrapped version
-                new_html = emoji_pattern.sub(r'<span class="emoji">\g<0></span>', text)
-                # Parse back to nodes
-                new_nodes = BeautifulSoup(new_html, 'html.parser')
-                text_node.replace_with(new_nodes)
+                new_html = emoji_pattern.sub(emoji_replacer, text)
+                if new_html != text:
+                    new_nodes = BeautifulSoup(new_html, 'html.parser')
+                    text_node.replace_with(new_nodes)
+
+        # 2. Replace Existing Emoji Images (from pymdownx.emoji or generic)
+        # Scan ALL images to find emoji candidates
+        all_imgs = soup.find_all('img')
+        print(f"DEBUG: Found {len(all_imgs)} images in document.")
+        
+        for img in all_imgs:
+            classes = img.get('class', [])
+            alt_text = img.get('alt', '')
+            src_text = img.get('src', '')
+            
+            # log for visibility
+            print(f"DEBUG: Inspecting IMG - Class: {classes}, Alt: {alt_text}, Src: {src_text[:50]}...")
+            
+            is_emoji = False
+            # Check Class
+            if classes and any(x in classes for x in ['emoji', 'emojione', 'gemoji', 'twemoji']):
+                is_emoji = True
+            
+            # Check Src (EmojiOne/Twemoji CDN)
+            if 'emojione' in src_text or 'twemoji' in src_text or 'gemoji' in src_text:
+                is_emoji = True
+                
+            # Check Alt (Shortcode format) and map availability
+            shortcode = alt_text
+            unicode_char = SHORTCODE_MAP.get(shortcode)
+            
+            if is_emoji or unicode_char:
+                if unicode_char:
+                    # Best case: we have the character
+                    b64_src = get_emoji_base64(unicode_char)
+                    if b64_src:
+                        # --- VISIBLE ALIGNMENT: Middle ---
+                        # Create wrapper (B tag helps sometimes with spacing)
+                        b_wrapper = factory_soup.new_tag("b")
+                        
+                        img['src'] = b64_src
+                        if 'width' in img.attrs: del img['width']
+                        if 'height' in img.attrs: del img['height']
+                        if 'class' in img.attrs: del img['class']
+                        
+                        img['style'] = "width: 14px; height: 14px; vertical-align: middle; margin: 0 1px;"
+                        
+                        # Create new img inside wrapper to ensure clean attributes
+                        new_img = factory_soup.new_tag("img")
+                        new_img['src'] = b64_src
+                        new_img['style'] = "width: 14px; height: 14px; vertical-align: middle; margin: 0 1px;"
+                        
+                        b_wrapper.append(new_img)
+                        img.replace_with(b_wrapper)
+                        
+                        print(f"DEBUG: REPLACED Emoji {shortcode} with Visible-Style (B+PNG+Middle).")
+                    else:
+                        print(f"DEBUG: Failed to render emoji char {unicode_char}")
+                elif emoji_pattern.search(alt_text):
+                     # Alt might be raw unicode?
+                     b64_src = get_emoji_base64(alt_text)
+                     if b64_src:
+                        # --- VISIBLE ALIGNMENT: Middle ---
+                        # Create wrapper
+                        b_wrapper = factory_soup.new_tag("b")
+                        new_img = factory_soup.new_tag("img")
+                        new_img['src'] = b64_src
+                        new_img['style'] = "width: 14px; height: 14px; vertical-align: middle; margin: 0 1px;"
+                        b_wrapper.append(new_img)
+                        img.replace_with(b_wrapper)
+
+                        print(f"DEBUG: REPLACED Emoji (Unicode) {alt_text} with Visible-Style (B+PNG+Middle).")
+            else:
+                pass # Not an emoji image
+
+        # 3. Wrap Blocks with Emojis in Tables (Fix for Clipping)
+        # xhtml2pdf clips inline images in paragraphs. It does NOT clip them in tables.
+        # Extensions: Handle <p> and <li>.
+        
+        blocks_to_wrap = set()
+        
+        for img in soup.find_all('img'):
+            # Detect our emojis by style (width: 14px) or if we added a marker
+            # Also blindly wrap ANY 'gemoji' class if we missed replacement (fallback)
+            style = img.get('style', '')
+            classes = img.get('class', [])
+            
+            should_wrap = False
+            if "14px" in style and "margin" in style:
+                should_wrap = True
+            elif classes and any(x in classes for x in ['emoji', 'gemoji', 'emojione']):
+                should_wrap = True
+                
+            if should_wrap:
+                # Find parent block. Prioritize Headings > Paragraphs > Lists
+                parent = img.find_parent(['p', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+                if parent:
+                    blocks_to_wrap.add(parent)
+                    
+        print(f"DEBUG: Wrapping {len(blocks_to_wrap)} blocks (p/li/h*) containing emojis in tables.")
+        
+        for block in blocks_to_wrap:
+            # Create Table Structure
+            table = factory_soup.new_tag("table")
+            table['style'] = "width: 100%; border-collapse: collapse; margin-bottom: 0px;"
+            table['border'] = "0"
+            table['cellpadding'] = "0"
+            
+            tr = factory_soup.new_tag("tr")
+            td = factory_soup.new_tag("td")
+            
+            # COPY ATTRIBUTES from Block to TD
+            if 'class' in block.attrs:
+                td['class'] = block['class']
+            
+            # Merge styles
+            base_style = "border: none; padding: 0; vertical-align: top; color: black; font-family: Helvetica, Arial, sans-serif;"
+            block_style = block.get('style', '')
+            td['style'] = f"{base_style} {block_style}"
+            
+            # Move contents
+            # We must list(contents) because moving modifies the list
+            contents = list(block.contents)
+            for item in contents:
+                td.append(item)
+            
+            tr.append(td)
+            table.append(tr)
+            
+            # For H1-H6 and LI, we put the table INSIDE the block to preserve TOC and List structure.
+            # for P, we REPLACE the block because P cannot contain Table.
+            if block.name == 'p':
+                block.replace_with(table)
+            else:
+                # h1-h6, li
+                block.append(table)
+        
+        # Update CSS for .emoji-img - RETURNING IT instead of appending
 
         # 6. Transform Math (KaTeX/MathJax) -> Clean TeX
         for katex_node in soup.find_all(class_='katex'):
@@ -353,12 +653,81 @@ def export_pdf(content_html: str) -> bytes:
                 # Apply Transformations
                 transform_html_for_pdf(main_container)
 
-                # Create a fresh clean DOM
-                new_soup = BeautifulSoup('<html><body></body></html>', 'html.parser')
+                # Create a fresh clean DOM with HEAD
+                new_soup = BeautifulSoup('<html><head><meta charset="utf-8"></head><body></body></html>', 'html.parser')
                 body = new_soup.body
+                head = new_soup.head
+
+                # Inject Emoji CSS (Critical for Visibility)
+                style_tag = new_soup.new_tag('style')
+                style_tag.string = """
+                    .emoji-img {
+                        width: 12px;
+                        height: 12px;
+                        vertical-align: bottom;
+                        margin: 0 1px;
+                        display: inline-block; /* Ensure it takes up space */
+                    }
+                """
+                head.append(style_tag)
                 
                 # Append the main container
                 body.append(main_container)
+
+                # Check for MERMAID Diagrams (Server-Side Render via Mermaid.ink)
+                # Since xhtml2pdf handles images well but JS not at all.
+                try:
+                    import requests
+                    import base64
+                    
+                    mermaids = body.find_all(class_='mermaid')
+                    if mermaids:
+                         print(f"DEBUG: Found {len(mermaids)} Mermaid diagrams to render.")
+                         
+                    for m_div in mermaids:
+                        try:
+                            code = m_div.get_text().strip()
+                            if not code: continue
+                            
+                            # Mermaid.ink expects specific encoding
+                            # https://mermaid.ink/img/<base64>
+                            # We use base64 of the code
+                            
+                            # Prepare config if needed (not supported by simple ink endpoint easily)
+                            # Code structure: "graph TD..."
+                            
+                            graph_bytes = code.encode('utf-8')
+                            base64_bytes = base64.urlsafe_b64encode(graph_bytes)
+                            base64_str = base64_bytes.decode('ascii')
+                            
+                            url = f"https://mermaid.ink/img/{base64_str}?bgColor=F8F8F8"
+                            
+                            print(f"DEBUG: Fetching Mermaid Render: {url[:50]}...")
+                            # Fetch with timeout
+                            response = requests.get(url, timeout=5)
+                            
+                            if response.status_code == 200:
+                                # Convert to Base64 Data URI
+                                img_b64 = base64.b64encode(response.content).decode('ascii')
+                                data_uri = f"data:image/jpeg;base64,{img_b64}"
+                                
+                                # Create IMG tag
+                                img_tag = new_soup.new_tag("img")
+                                img_tag['src'] = data_uri
+                                img_tag['style'] = "display: block; margin: 10px auto; max-width: 100%;"
+                                
+                                # Replace div with img
+                                m_div.replace_with(img_tag)
+                                print("DEBUG: Mermaid render successful.")
+                            else:
+                                print(f"DEBUG: Mermaid render failed: {response.status_code}")
+                                # Fallback to code block (already styled by CSS)
+                        except Exception as me:
+                             print(f"DEBUG: Mermaid rendering exception: {me}")
+                             # Fallback
+                except Exception as e:
+                    print(f"DEBUG: Mermaid setup failed: {e}")
+
                 
                 # Remove any screen-only elements: Nav, Sidebar, Buttons
                 # Extended list based on view.html
@@ -433,6 +802,10 @@ def export_pdf(content_html: str) -> bytes:
                     color: #000000;
                     background-color: #ffffff;
                 }
+                p {
+                    margin-bottom: 10px;
+                    line-height: 1.5; /* Vital for inline emojis to not clip */
+                }
                 /* Force simplified styling for PDF */
                 .markdown-body { font-family: Helvetica, Arial, sans-serif !important; color: black !important; background: white !important; }
                 
@@ -443,8 +816,23 @@ def export_pdf(content_html: str) -> bytes:
                 }
                 
                 /* Only strictly keep small visuals together. Allow text/tables to break. */
-                .mermaid, img, figure { 
+                img, figure { 
                     page-break-inside: avoid; 
+                }
+                
+                /* Mermaid Diagrams: Render as styled code blocks since we cannot render JS to SVG */
+                .mermaid {
+                    font-family: 'Courier New', Courier, monospace;
+                    white-space: pre-wrap;
+                    background-color: #f8f8f8;
+                    border: 1px solid #e1e4e8;
+                    border-radius: 4px;
+                    padding: 10px;
+                    margin: 10px 0;
+                    color: #555;
+                    font-size: 8pt;
+                    display: block;
+                    page-break-inside: avoid;
                 }
                 
                 /* Removed aggressive h1 page-break-before to prevent blank pages */
@@ -699,6 +1087,7 @@ def export_pdf(content_html: str) -> bytes:
                 }
         """
 
+
         full_html = """
         <html>
         <head>
@@ -776,7 +1165,7 @@ def get_features():
     
     return features
 
-# Metadata
+
 PLUGIN_METADATA = {
     'name': 'PDF Export',
     'description': 'Converts documentation to professional PDF format with Table of Contents, cover page, and optimized print layout.',
@@ -784,3 +1173,5 @@ PLUGIN_METADATA = {
     'icon': 'fa-file-pdf',
     'preinstalled': False
 }
+
+

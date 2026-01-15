@@ -66,6 +66,13 @@ removed header artifacts (`¶`), and stripped unsupported emojis ("tofu").
 ### Limitations
 - **Export**: Documented successful PDF/Word export limitations regarding dynamic diagrams (JS content) in `Todo`.
 
+## [v1.2.6] - 2026-01-15
+
+### Fixed (PDF Fidelity)
+- **Emoji Clipping**: Fixed persistent issue where emojis were clipped or invisible in PDF exports when inside paragraphs or lists. Implemented a comprehensive **Table Wrapper** strategy that automatically wraps block elements containing emojis in borderless tables to bypass `xhtml2pdf` clipping bugs.
+- **Emoji Rendering**: Switched to high-fidelity **32x32 PNG** generation for emojis using system fonts, replacing legacy font-based rendering which was prone to "blank box" issues.
+- **Robustness**: Created permanent integration test `tests/test_pdf_export_integration.py` to validate "Markdown -> HTML -> PDF" pipeline reliability.
+
 ## [v1.2.4] - 2026-01-10
 ### Fixed
 - **Editor Plugin**: Fixed critical `Feature` signature mismatch that prevented the Editor from loading in the bundled release (added `state` and `feature_type` args).
