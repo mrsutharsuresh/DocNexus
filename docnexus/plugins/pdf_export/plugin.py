@@ -598,6 +598,25 @@ def transform_html_for_pdf(soup: BeautifulSoup):
             new_span.string = f"${tex}$"
             script.replace_with(new_span)
             
+        # -------------------------------------------------------------------------
+        # Footnote Back-Ref Fix (Replace '↩' with Safe Unicode Arrow)
+        # -------------------------------------------------------------------------
+        backrefs = soup.find_all('a', class_='footnote-backref')
+        if backrefs:
+            for link in backrefs:
+                link.string = "^" 
+                link['style'] = "font-family: monospace; font-weight: bold; color: #2563eb; text-decoration: none; margin-left: 5px; font-size: 1.2em;"
+
+        # -------------------------------------------------------------------------
+        # Footnote Numbering Fix (Add Brackets [1])
+        # -------------------------------------------------------------------------
+        refs = soup.find_all('a', class_='footnote-ref')
+        if refs:
+            for link in refs:
+                if link.string and link.string.isdigit():
+                    link.string = f"[{link.string}]"
+                    link['style'] = "color: #2563eb; text-decoration: none; font-size: 80%; vertical-align: super;"
+
         # Remove Preview/Dummy spans
         for junk in soup.find_all(class_=['MathJax_Preview', 'katex-html']):
             if junk: junk.decompose()
@@ -1084,6 +1103,27 @@ def export_pdf(content_html: str) -> bytes:
                 .tab-content {
                     padding: 15px;
                     background-color: #ffffff;
+                }
+                
+                /* --- FOOTNOTES --- */
+                div.footnote {
+                    font-size: 0.9em;
+                    color: #555;
+                    margin-top: 20px;
+                    border-top: 1px solid #ddd;
+                    padding-top: 10px;
+                }
+                div.footnote ol {
+                    margin-left: 20px;
+                    padding-left: 15px; /* Increased padding */
+                    list-style-type: decimal;
+                    list-style-position: outside;
+                }
+                div.footnote li {
+                    margin-bottom: 5px;
+                    margin-left: 0; 
+                    padding-left: 5px;
+                    display: list-item; /* Force list-item behavior */
                 }
         """
 
